@@ -1,0 +1,16 @@
+origin                 0.25 0.5
+angle                  0
+unitLength             0.5
+unitLengthDegreeScaler 1.0 / 2.0
+
+command A draw 1
+command B draw 1
+command + rotate 60
+command - rotate -60
+
+axiom A
+
+production A B-A-B
+production B A+B+A
+
+

@@ -1,0 +1,65 @@
+﻿=============================================================
+			O String-ovima
+=============================================================
+String s1 = "aaa";
+String s2 = "aaa"; -> ista referenca?
+-U jednom class fileu, compiler prati jednake stringove, dok
+za cijeli projekt se koristi mapa
+
+A što kada u metodu pošaljemo, jel uvijek new String()?
+-Odgovor gore.
+
+=============================================================
+			Zadatak 1.
+=============================================================
+Gdje se sve koriste L-sustavi?
+-Generiranje uzoraka iz prirode.
+
+Smije li se za pretpostavljene postavke odmah pri vrhu zadati vrijednost:
+
+class A {
+	private double nekaVar = 0.4;
+	private double nekaVar2 = 0.1;
+}
+
+ili to u konstruktoru? Možda bolje 1. jer je manje koda?
+-Yep
+
+Deklaracija praznog Stringa: "" ili new String("")?
+-Bolje prvo.
+
+Je li bolje u konstruktoru inicijalizirati stog ili možemo odmah "gore" pri vrhu razreda?
+-Bolje u konstruktoru zbog poravnavanja.
+
+Kako testirati unutarnje privatne razrede? Npr. metoda generate?
+-Tako da napravimo vanjski razred ako je unutarnji vezan za vanjski.
+
+Jako puno konstanti - jesu li potrebne?
+-Nije potrebno ako se samo u jednoj metodi koristi.
+
+=============================================================
+			Zadatak 2.
+=============================================================
+StudentRecord grade -> String ili int?
+-int
+
+Svaki razred u svome paketu?
+
+Poravnavljanje u kodu:
+			String index =   attributes[0];
+			String surname = attributes[1];
+			String name = 	 attributes[2];
+			String grade =   attributes[3];
+
+poželjno umjesto ovog?
+			String index = attributes[0];
+			String surname = attributes[1];
+			String name = attributes[2];
+			String grade = attributes[3];
+-Može.
+
+StudentDB ne radi provjeru indexa i ocjena, već StudentDatabase?
+-Tako je.
+
+"program should terminate with appropriate message to user" = iznimka?
+-StudentDB hvata iznimku, te ju obrađuje.

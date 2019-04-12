@@ -1,0 +1,42 @@
+﻿============================================================
+			Zadatak 1.
+============================================================
+Zašto umetanje mora biti T, a remove/contains Object?
+-Želimo korisniku omogućiti što veću fleksibilnost.
+
+============================================================
+			Zadatak 2.
+============================================================
+Pitati jesam li dobro shvatio kako treba Dictionary implementirati.
+-Idi po arrayu i gledaj ako je taj ključ, updateaj vrijednost, inače dodaj na kraj.
+
+============================================================
+			Zadatak 3.
+============================================================
+Metoda rotate - isplati li se cacheat length da ne zovemo Math.sqrt 2 puta ili je to mikro-optimizacija?
+-Uvijek se isplati ako se koristi na više mjesta.
+
+Translacija se misli na vrh vektora?
+-Samo vrh.
+
+============================================================
+			Zadatak 4.
+============================================================
+Jesam li dobro napravio containsKey?
+-Ako imaš kod koji se ponavlja, probaj ga ubacit u privatnu metodu.
+
+Zašto "table = new TableEntry[slotCount]" radi?
+-table je već sam po sebi TableEntry pointer, tako da to radi.
+
+Zašto "table = (TableEntry<K, V>[]) new Object[slotCount]" ne radi?
+-Pokušaj castanja iz Object u TableEntry ne radi.
+
+doubleTheCapacity metoda -> može li se nekad staviti novi red ako se teško čita?
+-Ako se lakše čita, može.
+
+Može još samo malo pojašnjenje unutarnjih klasa?
+-STATIČKA = pomoćna struktura koja vanjskom korisniku nije bitna, te ne koristi varijable vanjskog razreda
+-NE-STATIČKA = pomoćna struktura koja vanjskom korisniku nije bitna, ali koristi varijable vanjskog razreda
+
+Kako pametno implementirati hasNext?
+-One liner.

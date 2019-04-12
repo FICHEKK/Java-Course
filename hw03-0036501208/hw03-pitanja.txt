@@ -1,0 +1,112 @@
+﻿============================================================
+			Zadatak 1.
+============================================================
+Java doc za sučelja, sve isto kao i za klasu?
+-Da.
+
+Ako neko sucelje ima metodu za koju znamo da ce u svakoj implementaciji bacati tocnu iznimku (npr. NoSuchElem),
+mozemo li u tom sucelju java doc @throws NoSuchElem da ne moramo kopirati za svaku implementaciju?
+-Yep, tako se to radi.
+
+Treba li dokumentirati demo programe gdje "na brzaka" gledamo radi li kod kako mislimo da bi trebao raditi?
+-Ne.
+
+============================================================
+			Zadatak 2.
+============================================================
+Enum zapis:
+A, B, C
+
+ili
+
+A,
+B,
+C
+-Oboje je ok, ali ako su konstante duže, onda je bolje svaku u svoj red, ako kratke onda u jedan red.
+
+
+Je li pozeljno eksplicitno u konstruktoru pridruziti varijabli nekoj vrijednost 0 (sto ona vec je po defaultu),
+da kod bude citljiviji? Npr. currentIndex?
+-Ne, zagađuje se kod.
+
+Jedan enum, jedna datoteka?
+-Da.
+
+Default vrijednost enuma?
+-null
+
+Magični znakovi? Npr. #, treba li neka konstanta za to? Recimo final char LEXER_SWITCH.
+-Postoje magični znakovi, ali mi ih ovdje ne koristimo.
+-Inače magični brojevi se izbjegavaju zbog:
+a) ako negdje trebamo u kodu promijeniti npr. 7 koji je magični broj, moramo više mjesta mijenjati, ako
+   deklariramo varijablu, samo na jednom mjestu
+b) ne znamo značenje tog broja, a ako imamo konstantu, samo ime nam objašnjava
+c) ako postoje duplikati (npr. magični broj 7 u liniji 55 i liniji 78), ne znamo značenje (jesu li to brojevi
+   koji se odnosne na istu stvar ili nisu)
+
+Kako modelirati kod kada klasa moze raditi u vise mode-ova?
+-Oblikovni obrazac stanje.
+
+Java doc svaku enum vrijednost?
+-Da, ali kratko (onda svaki enum u svoj red ide).
+
+============================================================
+			Zadatak 3.
+============================================================
+Dva mode-a za lexer? TEXT i TAG?
+-Da.
+
+Kako vracati ako treba string od int vrijednosti -> Integer.toString(i) ili i + "";
+-Integer.toString(i), a može i String.valueOf(i)
+
+If bez zagrada ako je samo jedan statement koji sigurno necemo mijenjati, npr. if(obj == null) return false;
+-Ako mijenja tijek koda (naredbe break, continue itd.), onda moze ali u istoj liniji.
+-Ako ima throw, onda u novu liniju i zagrade moraju biti.
+
+Jesu li "}" kao closing tagovi u jezicima?
+-Da.
+
+Koje iznimke bacati ako kolekcija nije jos inicijalizirana, a pokusamo dobiti neki element kolekcije?
+-IndexOutOfBoundsException
+
+Treba li u getNode provjerati je li objekt u kolekciji instanceof Node? Jedino dodajemo Node, tako da ja bi rekao ne?
+-Ne treba, mi interno znamo da će sigurno biti Node i da će castanje dobro proći jer korisnik ne može
+ ništa osim Node klase dodati u array.
+
+Ako metoda A zove metodu B koja baca iznimku i dokumentira ju, treba li i u A dokumentirati tu iznimku? Primjer getChild.
+-Da.
+
+Što je parser generalno? Program koji niz znakova pretvara u neki drugi oblik podataka?
+-Program koji pretvara tekst u drugi tip podatka (generalno u neko stablo, ali može u bilo što drugo, npr. u int).
+
+Smijemo li pomocne klase raditi, npr. Util koja ima metode koje provjeravaju ako je ime varijable/funkcije dobro?
+Je li to poželjno, da se smanji zađenje koda? Staviti ga kao package-private?
+-Može, ali dobra praksa je ako se ta klasa može koristiti iz više mjesta (npr. klasa Math). Ako se ne koristi
+ na više mjesta, opet se može izdvojiti, ali neka bude package-private da ne zagađuje namespace.
+
+Kako se ne pogubiti u većem projektu?
+-Dobre prakse, dobra organizacija, dobro imenovanje itd.
+
+Kako napraviti da očekujemo da je sljedeci token npr. varijabla? Ako nije, bacimo iznimku.
+-Napravi metodu npr. processFor() koji će u sebi napraviti takvu implementaciju:
+
+processFor() {
+  t = nextToken()
+  if(t == variable) -> good
+  else 		    -> throw exception
+
+  t = nextToken()
+  if(t == startExpression) -> good
+  else 		    -> throw exception
+
+ ...
+}
+
+Provjerava li lexer da li je npr. @abc dobar token za funkciju, a @@@ nije?
+-Ne, lexer isključivo vraća tokene i boli ga briga jesu li dobri semantički.
+
+Mora li isljucivo parser mijenjati stanje lexera?
+-Da, lexer ne mijenja svoje stanje sam.
+
+Provjerava li lexer je li token dobrog formata? Npr. za varijablu?
+-Već rečeno, ne, lexer samo vraća tokene koje poznaje (to su tokeni koje mi definiramo).
