@@ -1,0 +1,51 @@
+1. ZAD
+Java docs za factorial metodu?
+Svaka metoda mora imati java docs. Ocite metode imaju manje, "teze" imaju vise teksta.
+
+Java docs za static final varijablu? Nestaticke?
+Sve.
+
+Java docs za testove?
+Ne, ali komentari ako je kod kompliciraniji.
+
+Java docs za main metodu (ili samo objasniti sto klasa radi)?
+Da, main =/= radnja klase.
+
+Trebaju li iznimke bacati poruku (jel pozeljno)?
+Da, uvijek.
+
+Koristenje lambda izraza u testu?
+Smijemo.
+
+
+
+2. ZAD
+Dugacka linija koda u novi red?
+Kako kada, samo da je citljivo.
+
+Zatvaranje programa s System.exit?
+Nije preporucljivo. Return iz maina.
+
+Rectangle.print ili Rectangle.printRectangle?
+Prvo.
+
+Kako najbolje oblikovati kod sa scannerom? 1 instanca za cijeli program?
+Da, 1 instanca i šaljemo u ostale metode.
+
+Tocke na kraju java docs? Recenice pocinju s velikim slovom?
+Das, sve gramaticki, a parametri mogu bilo kako.
+
+
+
+3. ZAD
+Javna pomocna struktura - unutarnja public klasa? Ili static?
+Da, static.
+
+Kako u jUnit prvo ubaciti podatke i onda testirati na njima? Koristimo @BeforeAll?
+Može.
+
+Koristenje \n za novi red?
+Bolje ne, rade System.out.println().
+
+Prazan red izmedu teksta obajsnjenja metode i @param, @throws itd.?
+Da, citljivije je.
