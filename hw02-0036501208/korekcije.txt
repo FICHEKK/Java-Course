@@ -1,0 +1,135 @@
+﻿=======================================================================
+						1. RECENZIJA:
+=======================================================================
+
+Općenito je kod jako dobro i pregledno napisan, kao i Javadoc.
+
+
+Zamjerke i napomene:
+
+ArrayIndexedCollection - Nisu napisani testovi za normalnu uporabu funkcija insert i remove(index). Fale i testovi za metodu toArray().
+
+LinkedListCollection - U ispisu Maina (Demo programa) treca linija od kraja prikazuje da toArray metoda nije dobro implementirana (i nema je u testovima).
+			- syso(Arrays.toString(col2.toArray)) ispisuje [hr.fer.zemris.java.custom.collections...] umjesto elemenata.
+		     - Nije bilo potrebe metodu get(index) razdvajati u 2 zasebne metode.	
+		     - Metoda contains mogla je biti napisana jednostavnije (return indexOf(value) != -1)
+   		     - Testovi su mogli biti napisani malo opsirnije i bilo bi bolje da ih je bilo malo vise (npr. insertanje na 0-tu poziciju).
+
+ObjectStack - Demo program se raspada uz primjer "8 2 / perica 3 - *" - S obzirom da je to u definiciji minimalnog prihvatljivog rješenja, ocjena će, nažalost morati biti 1. Inace bi, po mojem misljenju ocjena sigurno bila 4/5.
+
+=======================================================================
+					1. RECENZIJA KOREKCIJE:
+=======================================================================
+
+ArrayIndexedCollection - Nisu napisani testovi za normalnu uporabu funkcija insert i remove(index). Fale i testovi za metodu toArray().
+-Dodano.
+
+U ispisu Maina (Demo programa) treca linija od kraja prikazuje da toArray metoda nije dobro implementirana (i nema je u testovima).
+-Popravljeno i dodan test.
+
+Nije bilo potrebe metodu get(index) razdvajati u 2 zasebne metode.	
+-"getListNodeAtIndex" je pomoćna metoda koja se koristi i u drugim dijelovima koda, čime smatram da ovo nije greška.
+
+Metoda contains mogla je biti napisana jednostavnije (return indexOf(value) != -1)
+-Dobra ideja, popravljeno!
+
+Testovi su mogli biti napisani malo opsirnije i bilo bi bolje da ih je bilo malo vise (npr. insertanje na 0-tu poziciju).
+-Dodano više testova (i insert na 0. poziciju).
+
+Demo program se raspada uz primjer "8 2 / perica 3 - *"
+-Popravljeno, sada se više ne ruši i svaka iznimna situacija se obrađuje!
+
+=======================================================================
+						2. RECENZIJA:
+=======================================================================
+
+Minimalni uvjeti nisu ispunjeni za:
+-2. i 3. zad:
+pr. sa stranice 7 ne daje dobar ispisa za
+- System.out.println(Arrays.toString(col.toArray())); ispisuje [20, San Francisco, Los Angeles, null] - zadnji element je null što ne smije biti.
+- System.out.println(Arrays.toString(col2.toArray())); ispisuje  [hr.fer.zemris.java.custom.collections.LinkedListIndexedCollection$ListNode@512ddf17, hr.fer.zemris.java.custom.collections.LinkedListIndexedCollection$ListNode@2c13da15, hr.fer.zemris.java.custom.collections.LinkedListIndexedCollection$ListNode@77556fd] - problem je u metodi toArray() u klasi LinkedListIndexedCollection gdje umjesto da u polje "elements" dodaje objekte koji predstavljaju vrijednost čvora (ListNode), u polje se upisuju reference na same objekte ListNode.
+
+-Testovi: u testu za ArrayIndexedCollection nema testova za clear, contains, forEach i toArray; u testu za LinkedListIndexedCollection nema testova za forEach, toArray i contains.
+
+-Metoda klase LinkedListIndexedCollection:
+Nedostaje metoda boolean remove(Object value), samo ima void remove(int index)
+
+4. zad.:
+Za unos "8 2 / perica 3 - *" program se raspada uz EmptyStackException koji se nigdje ne hvata.
+
+
+Javadoc:
+-Generalno korektan, neke metoda nemaju @throws gdje bi trebao biti.
+-StackDemo klasa u dokumentaciji razreda nema informaciju o tome da se program pokreće s 1 argumentom s komandne linije - to je napisano u javadocu metode main što se ne radi.
+
+=======================================================================
+					2. RECENZIJA KOREKCIJE:
+=======================================================================
+
+System.out.println(Arrays.toString(col.toArray())); ispisuje [20, San Francisco, Los Angeles, null] - zadnji element je null što ne smije biti.
+-Krivo sam shvatio kako metoda radi; vraćao sam samo elements. Sada vraća array koji ima samo elemente koji nisu null.
+
+System.out.println(Arrays.toString(col2.toArray())); ispisuje  [hr.fer.zemris.java.custom.collections.LinkedListIndexedCollection$ListNode@512ddf17, hr.fer.zemris.java.custom.collections.LinkedListIndexedCollection$ListNode@2c13da15, hr.fer.zemris.java.custom.collections.LinkedListIndexedCollection$ListNode@77556fd] - problem je u metodi toArray() u klasi LinkedListIndexedCollection gdje umjesto da u polje "elements" dodaje objekte koji predstavljaju vrijednost čvora (ListNode), u polje se upisuju reference na same objekte ListNode.
+-Sada radi kako treba. Imao sam elements[currentIndex] = currentNode, a trebalo je elements[currentIndex] = currentNode.value.
+
+Testovi: u testu za ArrayIndexedCollection nema testova za clear, contains, forEach i toArray; u testu za LinkedListIndexedCollection nema testova za forEach, toArray i contains.
+-Ja sam mislio da ne treba ove koje nisu u tablici (tako je pisalo)... Ali ok, dodani su sada svi testovi.
+
+Nedostaje metoda boolean remove(Object value), samo ima void remove(int index)
+-Dodao sam ju u ArrayIndex, ali nažalost zaboravio u LinkedList. Dodana je sada (i test za nju također)!
+
+Za unos "8 2 / perica 3 - *" program se raspada uz EmptyStackException koji se nigdje ne hvata.
+-Popravljeno! Sada se pokriva svaki mogući ulaz, te se loš unos uvijek obradi.
+
+StackDemo klasa u dokumentaciji razreda nema informaciju o tome da se program pokreće s 1 argumentom s komandne linije - to je napisano u javadocu metode main što se ne radi.
+-Ispravljeno!
+
+=======================================================================
+						3. RECENZIJA:
+=======================================================================
+
+1. Zadatak: Sve uredno.
+
+2. Zadatak: U tekstu je nezgodno formulirano, ali varijabla capacity se nije trebala održavati u razredu ArrayIndexedCollection
+			(objašnjeno i u Pitanja i odgovori). Konstruktori su napisani tako da delegiraju posao i da nema dupliciranja koda. 
+			Ipak, moglo se umjesto metode za inicijaliziranje napraviti privatni konstruktor (kako se i u uputi spominje), jer 
+			ima više smisla da je taj posao za konstruktor nego za člansku metodu. Metoda contains mogla se riješiti delegacijom 
+			metodi indexOf. Metoda toArray vraća elements, odnosno referencu na nj, što znači da će izmjene u kolekciji naknadno
+			mijenjati i dobiveni toArray niz, što vrlo vjerojatno ne želimo. Intuitivnije mi je da umjesto nove metode print() se 
+			nadjača metoda toString. Testovi korektni, no nedostaje test za metodu clear.
+
+3. Zadatak: Deklaraciju statičkog ugniježđenog razreda umjesto na kraj čitljivije je na početak staviti. Metoda contains je mogla
+			delegirati posao metodi inedxOf. Javadoc za metodu insert ostao iskopiran od remove. NEDOSTAJE METODA boolean remove, 
+			koju je trebalo nadjačati iz razreda collection -> NEZADOVOLJENJE MINIMALNOG UVJETA, program treba implementirati traženu 
+			funkcionalnost (prof. Čupić potvrdio https://ferko.fer.hr/ferko/QAAQuestion.action?courseInstanceID=2018L%2F38047&questionID=1274). Testovi uredni.
+
+4. Zadatak: Bolje je u konstruktoru inicijalizirati novi ArrayIndexedCollection nego kao defaultnu vrijednost varijable. Osim toga
+			lijepo implementiran. Ali zato u StackDemo primjeru za ulaz "8 2 / perica 3 - *" program se ruši s ispisom stack tracea
+			korisniku -> U UPUTI TAKOĐer minimalan uvjet. Razlog tomu: Ne provjeravaju se dobro ne-integer vrijednosti.
+
+5. Zadatak: metoda getAngle vraća vrijednosti iz ispravnog intervala. metoda parse radi ispravno za različite ulaze. Demo program
+			vraća točan rezultat. Datoteka main u kojoj se provjeravaju rezultati bi također trebala biti u Demo podpaketu. Hint za
+			metodu parse: korištenje regularnih izraza - pošto je parsiranje dosta komplicirano, bilo bi bolje ili koristiti regexe
+			ili radvojiti i izdvojiti neke cjeline u zasebne metode
+
+Sve u svemu lijepi stil, ali zbog nezadovoljenih minimalnih uvjeta u 4. i 3. zadatku moram dati ocjenu 1.
+
+=======================================================================
+					3. RECENZIJA KOREKCIJE:
+=======================================================================
+
+2. Zadatak:
+- Metoda contains je sada ispravljena (koristi indexOf).
+- Metoda toArray sada radi ispravno (više ne vraća null elemente).
+- Slažem se da sam mogao toString, hvala na savjetu.
+- Test za metodu clear je dodan.
+
+3. Zadatak:
+- Nisam znao ovo za statički ugniježđeni razred, hvala na savjetu.
+- Metoda contains ispravljena (koristi indexOf).
+- Dodana metoda boolean remove(Object value).
+
+4. Zadatak:
+- Dodani konstruktori za defaultni stog i za stog s inicijalnom veličinom.
+- Sve iznimke se sada hvataju i obrađuju.
+- Razred Main pomaknut u paket demo.

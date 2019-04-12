@@ -1,0 +1,48 @@
+﻿Kako u eclipsu prenijeti postavke workspacea?
+Kako virtualni stroj zna ArrayIndexOutOfBoundsException, npr.
+
+int[] polje = new int[2];
+polje[3] = 17; -> Svaki puta se provjerava size polja? Da, polje je objekt, ovo je samo sintaticki šećer
+
+Ako neka metoda baca neprovjeravanu iznimku, treba li svaki dio koda koji poziva tu metodu
+try catch-at?
+
+
+
+
+Zadatak 2:
+Dokumentacija nasljedenih metoda koje imaju istu radnju? Npr. metoda clear() ili metoda contains().
+A za metodu add koja ima drugaciju implemntaciju za drugu kolekciju?
+
+Pomoćne metode koje rade male poslove? Recimo za dupliciranje internog arraya.
+
+this.capacity da se odmah skuzi da je varijabla klase?
+
+Ekstra pomocne metode, smijemo li ostaviti? Npr. print collection.
+
+If bez zagrada za neke vrlo jednostavne provjere koje se neće mijenjati? Npr. if(value == null) return;
+
+Pomoćna metoda za provjeru ispravnosti indexa? Npr. requireInBounds(lower, upper)
+
+Što se sve testira pri testiranju konstruktora?
+
+Kako najbolje testirati insert, add, get i takve metode?
+
+
+Zadatak 3:
+Jel potreban default konstruktor? Ništa novog ne radi.
+
+Jel first = last = null; dobro ili nije poželjno? Rađe first = null; last = null;?
+	Jel se prvi zapis uopce koristi negdje?
+
+Zašto privatni konstruktor u ugnijezdenoj klasi mozemo koristiti u vanjskoj klasi?
+
+Poželjno this.varijabla ili samo varijabla?
+
+If else if else za slucaj s 3 dogadaja? (metoda remove)
+
+Zadatak 5:
+Od kud poceti parsiranje brojeva?
+
+Testiranje gettera i settera?
+Ne treba.
