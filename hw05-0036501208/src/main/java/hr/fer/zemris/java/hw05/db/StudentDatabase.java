@@ -146,10 +146,16 @@ public class StudentDatabase {
 	 *
 	 * @param jmbag the student record jmbag
 	 * @return the student record for the given jmbag
+	 * @throws StudentDatabaseException if student with given jmbag was not found 
 	 */
 	public StudentRecord forJMBAG(String jmbag) {
 		Objects.requireNonNull(jmbag, "Cannot find student records for a null key.");
-		return indexer.get(jmbag);
+		StudentRecord direct = indexer.get(jmbag);
+		
+		if(direct == null)
+			throw new StudentDatabaseException("Student with index '" + jmbag + "' was not found.");
+		
+		return direct;
 	}
 	
 	/**
