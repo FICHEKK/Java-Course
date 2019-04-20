@@ -1,0 +1,41 @@
+﻿---------------------------------------------------
+		GENERALNA PITANJA
+---------------------------------------------------
+
+Kako izaći iz rekurzije direktno - npr. kako to radi FileVisitResult.TERMINATE?
+
+Kako radi stream interno, bez pomoćnih kopija struktura?
+
+Koliko je brzi rad s datotekama na SSD-u, u usporedbi s HDD-om koji se rotira?
+
+Public abstract int read() - gdje su implementacija takvih metoda?
+
+Kako utf zna koliko byteova uzeti pri čitanju slova? Npr. ako je znak 'ž', koristit će 2 bytea, a za 'A' 1 byte.
+
+---------------------------------------------------
+		    Zadatak 1.
+---------------------------------------------------
+
+Je li source code generateKey() metode nedostupan zbog sigurnosti?
+
+Zašto su uvijek hex vrijednosti prikazane malim slovima, bolja vidljivost da je tamo slovo?
+
+---------------------------------------------------
+		    Zadatak 2.
+---------------------------------------------------
+
+Treba li shell imati static za symbole, tj. hoće li shell biti jedinstven?
+
+Pisanje na System.err da Scanner za System.in ne uhvati MULTILINESYMBOL?
+
+Vraćati svaki puta Collections.unmodifiableSortedMap(commands); ili napraviti rađe jednu privatnu
+varijablu u shellu koja wrappa mapu, pa poslati to?¸
+
+Description kao static final lista da se ne radi svaki puta nova u metodi?
+
+Napravio sam u ShellCommand default implementaciju descriptiona, mislim da je ovako bolje?
+
+CopyShellCommand - treba li konstanta za magični broj 1024?
+
+CopyShellCommand - kako malo bolje ovaj kod oblikovati? Ako samo jedna linija koda može baciti iznimku,
+samo nju stavljamo u try catch? Npr. String[] args = ArgumentSplitter.getArgs(arguments);
