@@ -3,39 +3,40 @@
 ---------------------------------------------------
 
 Kako izaći iz rekurzije direktno - npr. kako to radi FileVisitResult.TERMINATE?
+-Nema lijepog načina.
 
 Kako radi stream interno, bez pomoćnih kopija struktura?
+-Propagiranje od kraja prema početku. Koristi pomoćne strukture za sort i takve metode.
 
 Koliko je brzi rad s datotekama na SSD-u, u usporedbi s HDD-om koji se rotira?
+-Dva reda veličine brži.
 
-Public abstract int read() - gdje su implementacija takvih metoda?
+Public native int read() - gdje su implementacija takvih metoda?
+-Ovisi o platformi.
 
 Kako utf zna koliko byteova uzeti pri čitanju slova? Npr. ako je znak 'ž', koristit će 2 bytea, a za 'A' 1 byte.
+-Uvijek ima neki bit koji govori ekstra informacije.
 
 ---------------------------------------------------
 		    Zadatak 1.
 ---------------------------------------------------
 
 Je li source code generateKey() metode nedostupan zbog sigurnosti?
+-To ne bi bilo sigurno da je tako. Pravi sustavi su sigurni zbog nemogućnosti probijanja s današnjim računalima.
 
 Zašto su uvijek hex vrijednosti prikazane malim slovima, bolja vidljivost da je tamo slovo?
+-Nema posebnog razloga.
 
 ---------------------------------------------------
 		    Zadatak 2.
 ---------------------------------------------------
 
 Treba li shell imati static za symbole, tj. hoće li shell biti jedinstven?
-
-Pisanje na System.err da Scanner za System.in ne uhvati MULTILINESYMBOL?
+-Shell je samo instance jednog Environmenta, i svaki ima drugačije simbole.
 
 Vraćati svaki puta Collections.unmodifiableSortedMap(commands); ili napraviti rađe jednu privatnu
 varijablu u shellu koja wrappa mapu, pa poslati to?¸
-
-Description kao static final lista da se ne radi svaki puta nova u metodi?
-
-Napravio sam u ShellCommand default implementaciju descriptiona, mislim da je ovako bolje?
+-Wrappat i to slati stalno, inače se svaki puta radi novi objekt.
 
 CopyShellCommand - treba li konstanta za magični broj 1024?
-
-CopyShellCommand - kako malo bolje ovaj kod oblikovati? Ako samo jedna linija koda može baciti iznimku,
-samo nju stavljamo u try catch? Npr. String[] args = ArgumentSplitter.getArgs(arguments);
+-Magični brojevi su za potrebe mijenjanja više vrijednosti u kodu. Ako se nešto neće mijenjati, ne treba konstantu.
