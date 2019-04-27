@@ -1,0 +1,27 @@
+﻿---------------------------------------------------
+		    Zadatak 1.
+---------------------------------------------------
+
+Je is ispravno rješenje umjesto remove(observer) postaviti vrijednost na null, pa samo preskačemo ako naletimo na null?
+-Ne, koristiti copy on write koji kopira sadržaj array-a, radi nad kopijom neke modfikiracije, te na kraju referencu
+na originalni array prebaci na modificiranu kopiju.
+
+Koristi li se observer pattern kada pozovemo addEventListener na grafičkom sučelju (npr. za gumb)?
+-Da!
+
+---------------------------------------------------
+		    Zadatak 3.
+---------------------------------------------------
+
+Kako iskoristiti strategiju u ovom zadatku na pravilan način? Kako ispravno napraviti metode za koje nismo
+sigurni koji će biti povratni tip?
+-Postoji obrazac za to, Visitor obrazac.
+
+---------------------------------------------------
+		    Zadatak 4.
+---------------------------------------------------
+
+Je li pametno napraviti još 1 varijablu "ukupnoBodova" u StudentRecord, budući da se taj podatak često traži?
+Ili možda ideja 2, napraviti metodu koja računa i vraća taj podatak?
+-Ovisi o slučaju. U ovom slučaju nije loša ideja budući da se podatak o ukupnim bodovima ne mijenja. Također ako 
+profiler kaže da se puno vremena troši na izračunavanje
