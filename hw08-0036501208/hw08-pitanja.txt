@@ -1,0 +1,7 @@
+﻿---------------------------------------------------
+		    Zadatak 2.
+---------------------------------------------------
+
+Možemo li nekako doći do source code-a jar-a?
+
+Trebamo li uopće imati lib direktorij s .jar datotekama?
