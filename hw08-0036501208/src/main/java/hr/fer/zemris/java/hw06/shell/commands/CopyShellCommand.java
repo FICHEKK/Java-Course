@@ -10,7 +10,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.LinkedList;
-import java.util.List;
 
 import hr.fer.zemris.java.hw06.shell.Environment;
 import hr.fer.zemris.java.hw06.shell.ShellStatus;
@@ -21,48 +20,21 @@ import hr.fer.zemris.java.hw06.shell.ShellStatus;
  *
  * @author Filip Nemec
  */
-public class CopyShellCommand implements ShellCommand {
-	
-	/** This command's description derived as a list of {@code String} objects. */
-	private static final List<String> DESCRIPTION;
-	
-	static {
-		var desc = new LinkedList<String>();
-		
-		desc.add("- Copies the given source file to the given destination path.");
-		desc.add("- If the provided destination file already exists, user will be asked if the file should be overriden.");
-		desc.add("- If the provided destination is a directory, original file will be copied to that directory.");
-		desc.add("");
-		desc.add("Usage: 'copy <source file path> <destination file path>'");
-		
-		DESCRIPTION = Collections.unmodifiableList(desc);
-	}
+public class CopyShellCommand extends AbstractShellCommand {
 
 	@Override
 	public ShellStatus executeCommand(Environment env, String arguments) {
-		String[] args = null;
-		
 		try {
-			args = ArgumentParser.getArgs(arguments);
-		} catch(IllegalArgumentException e) {
-			env.writeln(e.getMessage());
-			return ShellStatus.CONTINUE;
-		}
+			String[] args = ArgumentParser.extractArgs(arguments, 2, 2);
 			
-		if(args.length != 2) {
-			env.writeln("Expected 2 aruguments: file source and file destination. Was: " + args.length);
-			return ShellStatus.CONTINUE;
-		}
-		
-		if(args[0].equals(args[1])) {
-			env.writeln("Source and destination should not point to the same path.");
-			return ShellStatus.CONTINUE;
-		}
-		
-		Path source 	 = Paths.get(args[0]);
-		Path destination = Paths.get(args[1]);
-		
-		try {
+			if(args[0].equals(args[1])) {
+				env.writeln("Source and destination should not point to the same path.");
+				return ShellStatus.CONTINUE;
+			}
+			
+			Path source 	 = env.getCurrentDirectory().resolve(args[0]);
+			Path destination = env.getCurrentDirectory().resolve(args[1]);
+			
 			if(Files.isDirectory(destination)) {
 				String inDirectoryPath = destination.toAbsolutePath() + File.separator + source.getFileName();
 				destination = Paths.get(inDirectoryPath);
@@ -76,13 +48,16 @@ public class CopyShellCommand implements ShellCommand {
 					String answer = env.readLine();
 					
 					if(answer.equals("y")) {
+						env.writeln("Overwriting file...");
 						break;
-					} else if(answer.equals("n")) {
+					}
+					
+					if(answer.equals("n")) {
 						env.writeln("File was not overwritten.");
 						return ShellStatus.CONTINUE;
-					} else {
-						env.writeln("Invalid answer. Please write 'y' for yes, or 'n' for no.");
 					}
+					
+					env.writeln("Invalid answer. Please write 'y' for yes, or 'n' for no.");
 				}
 			}
 			
@@ -94,8 +69,11 @@ public class CopyShellCommand implements ShellCommand {
 		} catch(IOException ex) {
 			env.writeln("Error occured during the copying of the file.");
 			
-		} catch(InvalidPathException ec) {
+		} catch(InvalidPathException ex) {
 			env.writeln("Given path in invalid.");
+			
+		} catch(IllegalArgumentException ex) {
+			env.writeln(ex.getMessage());
 			
 		}
 
@@ -127,12 +105,16 @@ public class CopyShellCommand implements ShellCommand {
 	}
 
 	@Override
-	public String getCommandName() {
-		return "copy";
-	}
-
-	@Override
-	public List<String> getCommandDescription() {
-		return DESCRIPTION;
+	protected void init() {
+		var desc = new LinkedList<String>();
+		
+		desc.add("- Copies the given source file to the given destination path.");
+		desc.add("- If the provided destination file already exists, user will be asked if the file should be overriden.");
+		desc.add("- If the provided destination is a directory, original file will be copied to that directory.");
+		desc.add("");
+		desc.add("Usage: 'copy <source file path> <destination file path>'");
+		
+		this.DESCRIPTION = Collections.unmodifiableList(desc);
+		this.NAME = "copy";
 	}
 }

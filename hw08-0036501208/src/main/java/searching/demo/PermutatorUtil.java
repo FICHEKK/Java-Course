@@ -12,7 +12,7 @@ import java.util.Random;
 public class PermutatorUtil {
 	
 	/** The amount of random moves that will be performed. */
-	private static final int STEP_COUNT = 1000;
+	private static final int STEP_COUNT = 128;
 	
 	/**
 	 * Generates a random <b>solvable</b> puzzle 3x3 grid state. It does

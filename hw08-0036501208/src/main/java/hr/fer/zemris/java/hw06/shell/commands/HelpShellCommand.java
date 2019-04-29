@@ -2,7 +2,6 @@ package hr.fer.zemris.java.hw06.shell.commands;
 
 import java.util.Collections;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
 
 import hr.fer.zemris.java.hw06.shell.Environment;
@@ -15,27 +14,13 @@ import hr.fer.zemris.java.hw06.shell.ShellStatus;
  *
  * @author Filip Nemec
  */
-public class HelpShellCommand implements ShellCommand {
+public class HelpShellCommand extends AbstractShellCommand {
 	
 	/** A border used for formatting command titles. */
 	private static final String BORDER = "|";
 	
 	/** {@code String} of empty spaces used for formatting command titles. */
 	private static final String EMPTY_SPACES = " ".repeat(12);
-	
-	/** This command's description derived as a list of {@code String} objects. */
-	private static final List<String> DESCRIPTION;
-	
-	static {
-		var desc = new LinkedList<String>();
-		
-		desc.add("- If no arguments are provided, simply lists all of the supported commands.");
-		desc.add("- Otherwise, you can get details of a certain command by providing command name.");
-		desc.add("");
-		desc.add("Usage: 'help' ?command?");
-		
-		DESCRIPTION = Collections.unmodifiableList(desc);
-	}
 
 	@Override
 	public ShellStatus executeCommand(Environment env, String arguments) {
@@ -101,12 +86,15 @@ public class HelpShellCommand implements ShellCommand {
 	}
 
 	@Override
-	public String getCommandName() {
-		return "help";
-	}
-
-	@Override
-	public List<String> getCommandDescription() {
-		return DESCRIPTION;
+	protected void init() {
+		var desc = new LinkedList<String>();
+		
+		desc.add("- If no arguments are provided, simply lists all of the supported commands.");
+		desc.add("- Otherwise, you can get details of a certain command by providing command name.");
+		desc.add("");
+		desc.add("Usage: 'help' ?command?");
+		
+		this.DESCRIPTION = Collections.unmodifiableList(desc);
+		this.NAME = "help";
 	}
 }

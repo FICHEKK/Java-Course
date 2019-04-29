@@ -60,12 +60,16 @@ public class SearchUtil {
 	public static <S> Node<S> bfsv(Supplier<S> s0,
 								   Function<S, List<Transition<S>>> succ,
 								   Predicate<S> goal) {
-		LinkedList<Node<S>> checkList = new LinkedList<>();
-		Set<S> visited = new HashSet<S>();
+		Node<S> initial = new Node<S>(null, s0.get(), 0);
 		
-		checkList.add(new Node<S>(null, s0.get(), 0));
+		LinkedList<Node<S>> checkList = new LinkedList<>();
+		checkList.add(initial);
+		
+		Set<S> visited = new HashSet<S>();
+		visited.add(initial.getState());
 		
 		while(!checkList.isEmpty()) {
+			System.out.println(checkList.size());
 			Node<S> ni = checkList.removeFirst();
 			
 			if(goal.test(ni.getState())) return ni;

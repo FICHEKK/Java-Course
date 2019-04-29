@@ -7,11 +7,9 @@ import java.nio.charset.IllegalCharsetNameException;
 import java.nio.charset.UnsupportedCharsetException;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
-import java.nio.file.Paths;
+import java.nio.file.Path;
 import java.util.Collections;
 import java.util.LinkedList;
-import java.util.List;
-import java.util.Objects;
 
 import hr.fer.zemris.java.hw06.shell.Environment;
 import hr.fer.zemris.java.hw06.shell.ShellStatus;
@@ -22,46 +20,25 @@ import hr.fer.zemris.java.hw06.shell.ShellStatus;
  *
  * @author Filip Nemec
  */
-public class CatShellCommand implements ShellCommand {
-	
-	/** This command's description derived as a list of {@code String} objects. */
-	private static final List<String> DESCRIPTION;
-	
-	static {
-		var desc = new LinkedList<String>();
-		
-		desc.add("- Outputs the given file to the shell.");
-		desc.add("");
-		desc.add("Usage: 'cat <file path> ?charset?'");
-		
-		DESCRIPTION = Collections.unmodifiableList(desc);
-	}
+public class CatShellCommand extends AbstractShellCommand {
 
 	@Override
 	public ShellStatus executeCommand(Environment env, String arguments) {
-		Objects.requireNonNull(env, "Given environment should not be null.");
-		Objects.requireNonNull(arguments, "Given arguments should not be null.");
-		
 		try {
-			String[] args = ArgumentParser.getArgs(arguments);
-		
-			if(args.length < 1 || args.length > 2) {
-				env.writeln("Invalid argument(s) '" + arguments + "': <file path> ?charset? expected.");
+			String[] args = ArgumentParser.extractArgs(arguments, 1, 2);
+			Charset charset = args.length == 1 ? Charset.defaultCharset() : Charset.forName(args[1]);
+			
+			Path filePath = env.getCurrentDirectory().resolve(args[0]);
+			
+			if(Files.isDirectory(filePath)) {
+				env.writeln("Provided path is a directory. File path is required.");
 				return ShellStatus.CONTINUE;
 			}
-		
-			try {
-				Charset charset = args.length == 1 ? Charset.defaultCharset() : Charset.forName(args[1]);
-				
-				BufferedReader reader = Files.newBufferedReader(Paths.get(args[0]), charset);
-				
-				try {
-					String line = null;
-					while((line = reader.readLine()) != null) {
-						env.writeln(line);
-					}
-				} finally {
-					reader.close();
+			
+			try(BufferedReader reader = Files.newBufferedReader(filePath, charset)) {
+				String line = null;
+				while((line = reader.readLine()) != null) {
+					env.writeln(line);
 				}
 				
 			} catch(UnsupportedCharsetException | IllegalCharsetNameException e) {
@@ -84,12 +61,14 @@ public class CatShellCommand implements ShellCommand {
 	}
 
 	@Override
-	public String getCommandName() {
-		return "cat";
-	}
-
-	@Override
-	public List<String> getCommandDescription() {
-		return DESCRIPTION;
+	protected void init() {
+		var desc = new LinkedList<String>();
+		
+		desc.add("- Outputs the given file to the shell.");
+		desc.add("");
+		desc.add("Usage: 'cat <file path> ?charset?'");
+		
+		this.DESCRIPTION = Collections.unmodifiableList(desc);
+		this.NAME = "cat";
 	}
 }

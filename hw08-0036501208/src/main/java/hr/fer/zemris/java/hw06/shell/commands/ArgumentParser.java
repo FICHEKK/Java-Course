@@ -2,6 +2,7 @@ package hr.fer.zemris.java.hw06.shell.commands;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * A simple utility class that splits the given command
@@ -24,7 +25,10 @@ class ArgumentParser {
 	 * @return an array of arguments from the original sequence
 	 * @throws IllegalArgumentException if quotes were not closed
 	 */
-	public static String[] getArgs(String arguments) throws IllegalArgumentException {
+	public static String[] getArgs(String arguments) {
+		Objects.requireNonNull(arguments, "Cannot get arguments for a null reference.");
+		if(arguments.isBlank()) return new String[0];
+		
 		char[] chars = arguments.toCharArray();
 		
 		List<String> args = new LinkedList<>();
@@ -89,5 +93,27 @@ class ArgumentParser {
 			throw new IllegalArgumentException("Quotes were not closed.");
 		
 		return args.toArray(new String[0]);
+	}
+	
+	/**
+	 * Extracts the arguments, but also requires the argument count
+	 * to be satisfied.
+	 *
+	 * @param sequence the sequence to extract arguments from
+	 * @param min the minimum number of arguments required
+	 * @param max the maximum number of arguments required
+	 * @return the arguments
+	 * @throws IllegalArgumentException if error during parsing occurs,
+	 * 									or if the argument count is not met
+	 */
+	public static String[] extractArgs(String sequence, int min, int max) {
+		String[] arguments = getArgs(sequence);
+		
+		if(arguments.length < min || arguments.length > max) {
+			String msg = "Expected argument count range [" + min + ", " + max + "]. Was: " + arguments.length;
+			throw new IllegalArgumentException(msg);
+		}
+		
+		return arguments;
 	}
 }

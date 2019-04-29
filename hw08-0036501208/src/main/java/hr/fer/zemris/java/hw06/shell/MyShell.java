@@ -1,7 +1,11 @@
 package hr.fer.zemris.java.hw06.shell;
 
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Scanner;
@@ -9,6 +13,7 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 
 import hr.fer.zemris.java.hw06.shell.commands.CatShellCommand;
+import hr.fer.zemris.java.hw06.shell.commands.CdShellCommand;
 import hr.fer.zemris.java.hw06.shell.commands.CharsetsShellCommand;
 import hr.fer.zemris.java.hw06.shell.commands.CopyShellCommand;
 import hr.fer.zemris.java.hw06.shell.commands.ExitShellCommand;
@@ -16,6 +21,7 @@ import hr.fer.zemris.java.hw06.shell.commands.HelpShellCommand;
 import hr.fer.zemris.java.hw06.shell.commands.HexDumpShellCommand;
 import hr.fer.zemris.java.hw06.shell.commands.LsShellCommand;
 import hr.fer.zemris.java.hw06.shell.commands.MkdirShellCommand;
+import hr.fer.zemris.java.hw06.shell.commands.PwdShellCommand;
 import hr.fer.zemris.java.hw06.shell.commands.ShellCommand;
 import hr.fer.zemris.java.hw06.shell.commands.SymbolShellCommand;
 import hr.fer.zemris.java.hw06.shell.commands.TreeShellCommand;
@@ -35,27 +41,27 @@ public class MyShell {
 	 */
 	public static void main(String[] args) {
 		Scanner scanner = new Scanner(System.in);
-		Shell shell = new Shell(scanner);
+		EnvironmentImpl env = new EnvironmentImpl(scanner);
 		
-		shell.writeln("Welcome to MyShell v1.0");
+		env.writeln("Welcome to MyShell v1.0");
 		
 		ShellStatus status = ShellStatus.CONTINUE;
 		do {
 			try {
-				shell.write(shell.PROMPT_SYMBOL + " ");
-				String line = readLineOrLines(shell);
+				env.write(env.PROMPT_SYMBOL + " ");
+				String line = readLineOrLines(env);
 				
 				String[] splitted = splitCommandFromArguments(line);
 				String commandName = splitted[0];
 				String arguments = splitted[1];
 				
-				ShellCommand command = shell.commands().get(commandName);
+				ShellCommand command = env.commands().get(commandName);
 				
 				if(command != null) {
-					status = command.executeCommand(shell, arguments);
+					status = command.executeCommand(env, arguments);
 				} else {
-					shell.writeln("'" + commandName + "' is not a valid command.");
-					shell.writeln("Type 'help' to see a list of all the valid commands.");
+					env.writeln("'" + commandName + "' is not a valid command.");
+					env.writeln("Type 'help' to see a list of all the valid commands.");
 				}
 			} catch(ShellIOException e) {
 				status = ShellStatus.TERMINATE;
@@ -74,7 +80,7 @@ public class MyShell {
 	 * @param shell the shell that is being read
 	 * @return a single {@code String} that is the shell command
 	 */
-	private static String readLineOrLines(Shell shell) {
+	private static String readLineOrLines(EnvironmentImpl shell) {
 		var sb = new StringBuilder();
 		
 		while(true) {
@@ -126,7 +132,7 @@ public class MyShell {
 	 *
 	 * @author Filip Nemec
 	 */
-	private static class Shell implements Environment {
+	private static class EnvironmentImpl implements Environment {
 		
 		/** Symbol that prompts the user to enter a command. */
 		private char PROMPT_SYMBOL = '>';
@@ -143,6 +149,12 @@ public class MyShell {
 		/** Scanner used for reading lines from the shell. */
 		private Scanner scanner = new Scanner(System.in);
 		
+		/** The current directory path. */
+		private Path currentDirectory = Paths.get(".").toAbsolutePath().normalize();
+		
+		/** Map used for storing and retrieving shared data. */
+		private Map<String, Object> sharedData = new HashMap<>();
+		
 		static {
 			SortedMap<String, ShellCommand> cmds = new TreeMap<>();
 			
@@ -156,6 +168,8 @@ public class MyShell {
 			cmds.put("cat",	 	 new CatShellCommand());
 			cmds.put("copy",	 new CopyShellCommand());
 			cmds.put("hexdump",  new HexDumpShellCommand());
+			cmds.put("pwd",		 new PwdShellCommand());
+			cmds.put("cd",		 new CdShellCommand());
 			
 			commands = Collections.unmodifiableSortedMap(cmds);
 		}
@@ -166,7 +180,7 @@ public class MyShell {
 		 * 
 		 * @param scanner the scanner used for reading from the shell
 		 */
-		public Shell(Scanner scanner) {
+		public EnvironmentImpl(Scanner scanner) {
 			this.scanner = Objects.requireNonNull(scanner, "Given scanner must not be null.");
 		}
 		
@@ -243,26 +257,26 @@ public class MyShell {
 
 		@Override
 		public Path getCurrentDirectory() {
-			// TODO Auto-generated method stub
-			return null;
+			return currentDirectory;
 		}
 
 		@Override
 		public void setCurrentDirectory(Path path) {
-			// TODO Auto-generated method stub
+			if(!Files.isDirectory(path))
+				throw new ShellIOException("Given path '" + path + "' is not a valid directory.");
 			
+			this.currentDirectory = path.toAbsolutePath().normalize();
 		}
 
 		@Override
 		public Object getSharedData(String key) {
-			// TODO Auto-generated method stub
-			return null;
+			return sharedData.get(key);
 		}
 
 		@Override
 		public void setSharedData(String key, Object value) {
-			// TODO Auto-generated method stub
-			
+			Objects.requireNonNull(key, "Shared data key cannot be null.");
+			sharedData.put(key, value);
 		}
 	}
 }

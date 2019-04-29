@@ -6,7 +6,7 @@ package hr.fer.zemris.java.hw06.shell.commands;
  *
  * @author Filip Nemec
  */
-public class Utility {
+class Utility {
 	
 	/** A {@code String} containing all the symbols which are the valid hexadecimal digits. */
 	private static final String validHexSymbols = "0123456789aAbBcCdDeEfF";

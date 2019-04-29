@@ -2,7 +2,6 @@ package hr.fer.zemris.java.hw06.shell.commands;
 
 import java.util.Collections;
 import java.util.LinkedList;
-import java.util.List;
 
 import hr.fer.zemris.java.hw06.shell.Environment;
 import hr.fer.zemris.java.hw06.shell.ShellStatus;
@@ -13,30 +12,7 @@ import hr.fer.zemris.java.hw06.shell.ShellStatus;
  *
  * @author Filip Nemec
  */
-public class SymbolShellCommand implements ShellCommand {
-	
-	/** This command's description derived as a list of {@code String} objects. */
-	private static final List<String> DESCRIPTION;
-	
-	static {
-		var desc = new LinkedList<String>();
-	
-		desc.add("- Outputs or changes the shell symbols.");
-		desc.add("- Possible symbols are:");
-		desc.add("      a) PROMPT");
-		desc.add("      b) MORELINES");
-		desc.add("      c) MULTILINE");
-		desc.add("");
-		desc.add("- If you wish to output the current symbol for PROMPT:");
-		desc.add("      'symbol PROMPT' => outputs the current PROMPT symbol");
-		desc.add("");
-		desc.add("- If you wish to change the current symbol for PROMPT:");
-		desc.add("      'symbol PROMPT #' => changes the current PROMPT symbol to '#'");
-		desc.add("");
-		desc.add("Usage: 'symbol <possible symbol> ?new symbol?'");
-		
-		DESCRIPTION = Collections.unmodifiableList(desc);
-	}
+public class SymbolShellCommand extends AbstractShellCommand {
 
 	@Override
 	public ShellStatus executeCommand(Environment env, String arguments) {
@@ -98,12 +74,24 @@ public class SymbolShellCommand implements ShellCommand {
 	}
 
 	@Override
-	public String getCommandName() {
-		return "symbol";
-	}
-
-	@Override
-	public List<String> getCommandDescription() {
-		return DESCRIPTION;
+	protected void init() {
+		var desc = new LinkedList<String>();
+		
+		desc.add("- Outputs or changes the shell symbols.");
+		desc.add("- Possible symbols are:");
+		desc.add("      a) PROMPT");
+		desc.add("      b) MORELINES");
+		desc.add("      c) MULTILINE");
+		desc.add("");
+		desc.add("- If you wish to output the current symbol for PROMPT:");
+		desc.add("      'symbol PROMPT' => outputs the current PROMPT symbol");
+		desc.add("");
+		desc.add("- If you wish to change the current symbol for PROMPT:");
+		desc.add("      'symbol PROMPT #' => changes the current PROMPT symbol to '#'");
+		desc.add("");
+		desc.add("Usage: 'symbol <possible symbol> ?new symbol?'");
+		
+		this.DESCRIPTION = Collections.unmodifiableList(desc);
+		this.NAME = "symbol";
 	}
 }

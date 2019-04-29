@@ -102,7 +102,20 @@ public interface Environment {
 	 */
 	void setCurrentDirectory(Path path);
 	
-	
+	/**
+	 * Returns the shared data that this environment holds,
+	 * retrieved by the given key.
+	 *
+	 * @param key the key
+	 * @return the shared data for the given key
+	 */
 	Object getSharedData(String key);
+	
+	/**
+	 * Stores the given data for the given key.
+	 *
+	 * @param key the key for the shared data
+	 * @param value the value stored for the given key
+	 */
 	void setSharedData(String key, Object value);
 }

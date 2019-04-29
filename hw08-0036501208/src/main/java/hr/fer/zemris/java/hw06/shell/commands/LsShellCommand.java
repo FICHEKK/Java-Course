@@ -1,6 +1,5 @@
 package hr.fer.zemris.java.hw06.shell.commands;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
@@ -12,8 +11,7 @@ import java.text.SimpleDateFormat;
 import java.util.Collections;
 import java.util.Date;
 import java.util.LinkedList;
-import java.util.List;
-import java.util.Objects;
+import java.util.stream.Stream;
 
 import hr.fer.zemris.java.hw06.shell.Environment;
 import hr.fer.zemris.java.hw06.shell.ShellStatus;
@@ -24,62 +22,49 @@ import hr.fer.zemris.java.hw06.shell.ShellStatus;
  *
  * @author Filip Nemec
  */
-public class LsShellCommand implements ShellCommand {
-	
-	/** This command's description derived as a list of {@code String} objects. */
-	private static final List<String> DESCRIPTION;
-	
-	static {
-		var desc = new LinkedList<String>();
-		
-		desc.add("- Lists all of the files in the given directory with detailed information.");
-		desc.add("");
-		desc.add("Usage: 'ls <dir path>'");
-		
-		DESCRIPTION = Collections.unmodifiableList(desc);
-	}
+public class LsShellCommand extends AbstractShellCommand {
 
 	@Override
 	public ShellStatus executeCommand(Environment env, String arguments) {
-		Objects.requireNonNull(env, "Given environment should not be null.");
-		Objects.requireNonNull(arguments, "Given arguments should not be null.");
+		String argument = ArgumentParser.extractArgs(arguments, 1, 1)[0];
 		
-		if(arguments.isEmpty()) {
-			env.writeln("Given directory path cannot be empty.");
-			return ShellStatus.CONTINUE;
-		}
-		
-		File root = new File(arguments);
-		
-		if(!root.isDirectory()) {
-			env.writeln("Given path '" + root.getName() + "' is not a directory.");
-			return ShellStatus.CONTINUE;
-		}
-		
-		File[] files = root.listFiles();
-		
-		if(files == null) {
-			env.writeln("Error loading the given directory.");
-			return ShellStatus.CONTINUE;
-		}
-		
-		try {
-			for(File file : files) {
-				String info     = getFileInfo(file.toPath());
-				String size     = getFileSize(file.toPath());
-				String creation = getFileCreationTime(file.toPath());
-				String name 	= file.getName();
-				
-				env.writeln(info + " " + size + " " + creation + " " + name);
+		Path root = null;
+		if(argument.equals(".")) {
+			root = env.getCurrentDirectory();
+			
+		} else {
+			root = env.getCurrentDirectory().resolve(argument);
+			
+			if(!Files.isDirectory(root)) {
+				env.writeln("Given path '" + root.getFileName() + "' is not a directory.");
+				return ShellStatus.CONTINUE;
 			}
+		}
+		
+		try(Stream<Path> pathStream = Files.list(root)) {
+			pathStream.forEach(path -> {
+				try {
+					String info     = getFileInfo(path);
+					String size     = getFileSize(path);
+					String creation = getFileCreationTime(path);
+					String name 	= path.getFileName().toString();
+					
+					env.writeln(info + " " + size + " " + creation + " " + name);
+					
+				} catch(IOException e) {
+					env.writeln("Error during the retrieval of file information.");
+					
+				}
+			});
+
 		} catch(IOException e) {
-			env.writeln("Error during the retrieval of file information.");
+			env.writeln("Error during stream creation.");
 		}
 		
 		return ShellStatus.CONTINUE;
 	}
 
-	private String getFileCreationTime(Path path) throws IOException {
+	private static String getFileCreationTime(Path path) throws IOException {
 		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 		
 		BasicFileAttributeView faView = Files.getFileAttributeView(
@@ -107,12 +92,14 @@ public class LsShellCommand implements ShellCommand {
 	}
 
 	@Override
-	public String getCommandName() {
-		return "ls";
-	}
-
-	@Override
-	public List<String> getCommandDescription() {
-		return DESCRIPTION;
+	protected void init() {
+		var desc = new LinkedList<String>();
+		
+		desc.add("- Lists all of the files in the given directory with detailed information.");
+		desc.add("");
+		desc.add("Usage: 'ls <dir path>'");
+		
+		this.DESCRIPTION = Collections.unmodifiableList(desc);
+		this.NAME = "ls";
 	}
 }

@@ -1,6 +1,5 @@
 package hr.fer.zemris.java.hw06.shell.commands;
 
-import java.nio.charset.Charset;
 import java.util.Collections;
 import java.util.LinkedList;
 
@@ -8,16 +7,15 @@ import hr.fer.zemris.java.hw06.shell.Environment;
 import hr.fer.zemris.java.hw06.shell.ShellStatus;
 
 /**
- * Command that displays all of the supported
- * character sets, which is platform dependent.
+ * Command that prints the current working directory.
  *
  * @author Filip Nemec
  */
-public class CharsetsShellCommand extends AbstractShellCommand {
+public class PwdShellCommand extends AbstractShellCommand {
 
 	@Override
 	public ShellStatus executeCommand(Environment env, String arguments) {
-		Charset.availableCharsets().forEach((k, v) -> env.writeln(k));
+		env.writeln(env.getCurrentDirectory().toString());
 		return ShellStatus.CONTINUE;
 	}
 
@@ -25,11 +23,11 @@ public class CharsetsShellCommand extends AbstractShellCommand {
 	protected void init() {
 		var desc = new LinkedList<String>();
 		
-		desc.add("- Lists the names of all the supported charsets.");
+		desc.add("- Prints the current working directory.");
 		desc.add("");
-		desc.add("Usage: 'charsets'");
+		desc.add("Usage: 'pwd'");
 		
 		this.DESCRIPTION = Collections.unmodifiableList(desc);
-		this.NAME = "charsets";
+		this.NAME = "pwd";
 	}
 }

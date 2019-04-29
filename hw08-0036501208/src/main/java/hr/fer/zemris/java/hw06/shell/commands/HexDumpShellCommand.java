@@ -4,12 +4,9 @@ import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.Collections;
 import java.util.LinkedList;
-import java.util.List;
-import java.util.Objects;
 
 import hr.fer.zemris.java.hw06.shell.Environment;
 import hr.fer.zemris.java.hw06.shell.ShellStatus;
@@ -20,10 +17,7 @@ import hr.fer.zemris.java.hw06.shell.ShellStatus;
  *
  * @author Filip Nemec
  */
-public class HexDumpShellCommand implements ShellCommand {
-	
-	/** This command's description derived as a list of {@code String} objects. */
-	private static final List<String> DESCRIPTION;
+public class HexDumpShellCommand extends AbstractShellCommand {
 	
 	/** Defines how many bytes will be per row. */
 	private static final int BYTES_PER_ROW = 16;
@@ -42,52 +36,37 @@ public class HexDumpShellCommand implements ShellCommand {
 	
 	/** Number of partitions that hex dump is divided into. */
 	private static final int PARTITION_COUNT = 2;
-	
-	static {
-		var desc = new LinkedList<String>();
-		
-		desc.add("- Displays the entire file's contents in hexadecimal format to the shell.");
-		desc.add("- As an argument it expects a path that needs to be a file, not a directory.");
-		desc.add("");
-		desc.add("Usage: 'hexdump <file path>'");
-		
-		DESCRIPTION = Collections.unmodifiableList(desc);
-	}
 
 	@Override
 	public ShellStatus executeCommand(Environment env, String arguments) {
-		Objects.requireNonNull(env, "Given environment should not be null.");
-		Objects.requireNonNull(arguments, "Given arguments should not be null.");
-		
-		String[] args = null;
 		try {
-			args = ArgumentParser.getArgs(arguments);
+			String[] args = ArgumentParser.extractArgs(arguments, 1, 1);
+			Path filePath = env.getCurrentDirectory().resolve(args[0]);
+			
+			if(Files.isDirectory(filePath)) {
+				env.writeln("Given path '" + filePath + "' is not a file, but a directory.");
+				return ShellStatus.CONTINUE;
+			}
+			
+			if(!Files.exists(filePath)) {
+				env.writeln("File does not exist.");
+				return ShellStatus.CONTINUE;
+			}
+			
+			try(BufferedInputStream bis = new BufferedInputStream(Files.newInputStream(filePath, StandardOpenOption.READ))) {
+				byte[] bytes = new byte[BLOCK_SIZE];
+				
+				int count;
+				while((count = bis.read(bytes)) > 0) {
+					outputHexData(env, bytes, count);
+				}
+			} catch(IOException e) {
+				env.writeln("Error during the retrieval of file information.");
+			}
+			
 		} catch(IllegalArgumentException e) {
 			env.writeln(e.getMessage());
-			return ShellStatus.CONTINUE;
-		}
-		
-		if(args.length != 1) {
-			env.writeln("Expected a single argument: file path. Was " + args.length + " argument(s).");
-			return ShellStatus.CONTINUE;
-		}
-		
-		Path path = Paths.get(args[0]);
-		
-		if(Files.isDirectory(path)) {
-			env.writeln("Given path '" + path + "' is not a file, but a directory.");
-			return ShellStatus.CONTINUE;
-		}
-		
-		try(BufferedInputStream bis = new BufferedInputStream(Files.newInputStream(path, StandardOpenOption.READ))) {
-			byte[] bytes = new byte[BLOCK_SIZE];
 			
-			int count;
-			while((count = bis.read(bytes)) > 0) {
-				outputHexData(env, bytes, count);
-			}
-		} catch(IOException e) {
-			env.writeln("Error during the retrieval of file information.");
 		}
 		
 		return ShellStatus.CONTINUE;
@@ -171,13 +150,15 @@ public class HexDumpShellCommand implements ShellCommand {
 	}
 
 	@Override
-	public String getCommandName() {
-		return "hexdump";
+	protected void init() {
+		var desc = new LinkedList<String>();
+		
+		desc.add("- Displays the entire file's contents in hexadecimal format to the shell.");
+		desc.add("- As an argument it expects a path that needs to be a file, not a directory.");
+		desc.add("");
+		desc.add("Usage: 'hexdump <file path>'");
+		
+		this.DESCRIPTION = Collections.unmodifiableList(desc);
+		this.NAME = "hexdump";
 	}
-
-	@Override
-	public List<String> getCommandDescription() {
-		return DESCRIPTION;
-	}
-
 }
