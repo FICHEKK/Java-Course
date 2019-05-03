@@ -16,11 +16,16 @@ import hr.fer.zemris.java.hw06.shell.commands.CatShellCommand;
 import hr.fer.zemris.java.hw06.shell.commands.CdShellCommand;
 import hr.fer.zemris.java.hw06.shell.commands.CharsetsShellCommand;
 import hr.fer.zemris.java.hw06.shell.commands.CopyShellCommand;
+import hr.fer.zemris.java.hw06.shell.commands.DropdShellCommand;
 import hr.fer.zemris.java.hw06.shell.commands.ExitShellCommand;
 import hr.fer.zemris.java.hw06.shell.commands.HelpShellCommand;
 import hr.fer.zemris.java.hw06.shell.commands.HexDumpShellCommand;
+import hr.fer.zemris.java.hw06.shell.commands.ListdShellCommand;
 import hr.fer.zemris.java.hw06.shell.commands.LsShellCommand;
+import hr.fer.zemris.java.hw06.shell.commands.MassRenameShellCommand;
 import hr.fer.zemris.java.hw06.shell.commands.MkdirShellCommand;
+import hr.fer.zemris.java.hw06.shell.commands.PopdShellCommand;
+import hr.fer.zemris.java.hw06.shell.commands.PushdShellCommand;
 import hr.fer.zemris.java.hw06.shell.commands.PwdShellCommand;
 import hr.fer.zemris.java.hw06.shell.commands.ShellCommand;
 import hr.fer.zemris.java.hw06.shell.commands.SymbolShellCommand;
@@ -158,18 +163,23 @@ public class MyShell {
 		static {
 			SortedMap<String, ShellCommand> cmds = new TreeMap<>();
 			
-			cmds.put("symbol",   new SymbolShellCommand());
-			cmds.put("exit", 	 new ExitShellCommand());
-			cmds.put("help", 	 new HelpShellCommand());
-			cmds.put("tree", 	 new TreeShellCommand());
-			cmds.put("mkdir", 	 new MkdirShellCommand());
-			cmds.put("charsets", new CharsetsShellCommand());
-			cmds.put("ls", 		 new LsShellCommand());
-			cmds.put("cat",	 	 new CatShellCommand());
-			cmds.put("copy",	 new CopyShellCommand());
-			cmds.put("hexdump",  new HexDumpShellCommand());
-			cmds.put("pwd",		 new PwdShellCommand());
-			cmds.put("cd",		 new CdShellCommand());
+			cmds.put("symbol",      new SymbolShellCommand());
+			cmds.put("exit", 	 	new ExitShellCommand());
+			cmds.put("help", 		new HelpShellCommand());
+			cmds.put("tree", 	  	new TreeShellCommand());
+			cmds.put("mkdir", 	  	new MkdirShellCommand());
+			cmds.put("charsets",  	new CharsetsShellCommand());
+			cmds.put("ls", 		  	new LsShellCommand());
+			cmds.put("cat",	 	  	new CatShellCommand());
+			cmds.put("copy",	  	new CopyShellCommand());
+			cmds.put("hexdump",   	new HexDumpShellCommand());
+			cmds.put("pwd",		  	new PwdShellCommand());
+			cmds.put("cd",		  	new CdShellCommand());
+			cmds.put("pushd",	  	new PushdShellCommand());
+			cmds.put("listd",	  	new ListdShellCommand());
+			cmds.put("dropd",	  	new DropdShellCommand());
+			cmds.put("popd",	 	new PopdShellCommand());
+			cmds.put("massrename", 	new MassRenameShellCommand());
 			
 			commands = Collections.unmodifiableSortedMap(cmds);
 		}

@@ -1,4 +1,15 @@
 ﻿---------------------------------------------------
+		    Zadatak 1.
+---------------------------------------------------
+
+Što ako je pod ključem "cdstack" već neki drugi objekt koji nije stog?
+
+Kako najpametnije iterirati po stogu bez da se promijeni stanje stoga?
+
+Zašto je sintaksa za kratki lambda izraz "::"?
+
+
+---------------------------------------------------
 		    Zadatak 2.
 ---------------------------------------------------
 
