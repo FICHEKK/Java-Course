@@ -2,6 +2,9 @@ package hr.fer.zemris.math;
 
 import java.util.Objects;
 
+import hr.fer.zemris.java.fractals.cmplxcache.ComplexCache;
+import hr.fer.zemris.java.fractals.cmplxcache.IComplexCache;
+
 /**
  * Models complex polynomial functions of the following
  * format:
@@ -103,12 +106,29 @@ public class ComplexPolynomial {
 	 * @return the polynomial value at the given point {@code z}
 	 */
 	public Complex apply(Complex z) {
-		Complex result = Complex.ZERO;
+		// Bad code
+//		Complex result = Complex.ZERO;
+//		
+//		for(int n = 0; n < factors.length; n++) {
+//			if(factors[n] == null) continue;
+//			Complex member = factors[n].multiply(z.power(n));
+//			result = result.add(member);
+//		}
+//		
+//		return result;
 		
-		for(int n = 0; n < factors.length; n++) {
-			if(factors[n] == null) continue;
-			Complex member = factors[n].multiply(z.power(n));
-			result = result.add(member);
+
+		
+//		Complex result = factors[order()];
+		
+		IComplexCache cache = ComplexCache.getCache();
+		Complex result = cache.get(factors[order()]);
+		
+		// Horner's algorithm
+		for(int i = order() - 1; i >= 0; i--) {
+			if(factors[i] == null) continue;
+			result.modifyMultiply(z);
+			result.modifyAdd(factors[i]);
 		}
 		
 		return result;

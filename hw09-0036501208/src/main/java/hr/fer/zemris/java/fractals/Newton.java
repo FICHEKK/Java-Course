@@ -12,6 +12,10 @@ import java.util.concurrent.Future;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import hr.fer.zemris.java.fractals.cmplxcache.ComplexCache;
+import hr.fer.zemris.java.fractals.cmplxcache.ComplexCacheImpl;
+import hr.fer.zemris.java.fractals.cmplxcache.IComplexCache;
+import hr.fer.zemris.java.fractals.cmplxcache.IThreadBoundComplexCache;
 import hr.fer.zemris.java.fractals.viewer.FractalViewer;
 import hr.fer.zemris.java.fractals.viewer.IFractalProducer;
 import hr.fer.zemris.java.fractals.viewer.IFractalResultObserver;
@@ -26,6 +30,12 @@ import hr.fer.zemris.math.ComplexRootedPolynomial;
  * @author Filip Nemec
  */
 public class Newton {
+	
+	private static ComplexPolynomial polynomial;
+	
+	private static ComplexRootedPolynomial polynomialRooted;
+	
+	private static ComplexPolynomial derived;
 	
 	/**
 	 * Program starts from here.
@@ -66,9 +76,12 @@ public class Newton {
 		
 		
 		Complex[] roots = rootsList.toArray(new Complex[0]);
-		ComplexRootedPolynomial crp = new ComplexRootedPolynomial(Complex.ONE, roots);
 		
-		FractalViewer.show(new NewtonFractalProducer(crp));
+		polynomialRooted = new ComplexRootedPolynomial(Complex.ONE, roots);
+		polynomial = polynomialRooted.toComplexPolynom();
+		derived = polynomial.derive();
+		
+		FractalViewer.show(new NewtonFractalProducer());
 		
 		scanner.close();
 	}
@@ -80,16 +93,10 @@ public class Newton {
 	 */
 	public static class NewtonFractalProducer implements IFractalProducer {
 		
-		/** The complex rooted polynomial function for this fractal. */
-		private ComplexRootedPolynomial polynomialRooted;
-		
-		/** The complex polynomial function for this fractal. */
-		private ComplexPolynomial polynomial;
-		
 		/** The pool of threads which are being reused. */
-		private ExecutorService pool;
+		private static ExecutorService pool;
 		
-		/** Number of threads used by this producer. */
+		/** The number of threads used by the {@code ExecutorService}. */
 		private static final int THREAD_COUNT = Runtime.getRuntime().availableProcessors();
 		
 		/**
@@ -98,10 +105,8 @@ public class Newton {
 		 * @param polynomialRooted the complex rooted polynomial
 		 * @param pool the pool of threads, since this task is CPU heavy
 		 */
-		public NewtonFractalProducer(ComplexRootedPolynomial polynomialRooted) {
-			this.polynomialRooted = polynomialRooted;
-			this.polynomial = polynomialRooted.toComplexPolynom();
-			this.pool = Executors.newFixedThreadPool(THREAD_COUNT, new DaemonicThreadFactory());
+		public NewtonFractalProducer() {
+			pool = Executors.newFixedThreadPool(THREAD_COUNT, new DaemonicThreadFactory());
 		}
 		
 		@Override
@@ -115,6 +120,8 @@ public class Newton {
 			
 			List<Future<Void>> results = new ArrayList<>();
 			
+			long startTime = System.currentTimeMillis();
+			
 			for(int i = 0; i < numberOfPortions; i++) {
 				int yStart = i * portionRows;
 				int yEnd = (i+1) * portionRows;
@@ -123,9 +130,7 @@ public class Newton {
 					yEnd = height - 1;
 				}
 				
-				var job = new CalculatePortionOfFractalJob(data, width, height, yStart, yEnd,
-													  reMin, reMax, imMin, imMax,
-													  polynomial, polynomialRooted);
+				var job = new CalculatePortionOfFractalJob(data, width, height, yStart, yEnd, reMin, reMax, imMin, imMax);
 				results.add(pool.submit(job));
 			}
 			
@@ -136,6 +141,9 @@ public class Newton {
 				}
 			}
 			
+			System.out.println(System.currentTimeMillis() - startTime + "ms");
+			
+			System.out.println("Finished");
 			observer.acceptResult(data, (short) (polynomial.order()+1), requestNo);
 		}
 	}
@@ -175,11 +183,11 @@ public class Newton {
 		/** The calculated data storage array. */
 		private short[] data;
 		
-		/** The complex polynomial. */
-		private ComplexPolynomial polynomial;
+		/** The maximum number of iterations. */
+		private static final int MAX_ITER = 64;
 		
-		/** The complex rooted polynomial. */
-		private ComplexRootedPolynomial polynomialRooted;
+		/** The convergence threshold. */
+		private static final double THRESHOLD = 0.001;
 		
 		/**
 		 * Constructs a new job that will calculate the portion of the fractal.
@@ -193,12 +201,9 @@ public class Newton {
 		 * @param reMax the maximal value on the real axis
 		 * @param imMin the minimal value on the imaginary axis
 		 * @param imMax the maximal value on the imaginary axis
-		 * @param polynomial the complex polynomial
-		 * @param polynomialRooted the complex rooted polynomial
 		 */
 		public CalculatePortionOfFractalJob(short[] data, int width, int height, int yStart, int yEnd,
-									   double reMin, double reMax, double imMin, double imMax,
-									   ComplexPolynomial polynomial, ComplexRootedPolynomial polynomialRooted) {
+									   double reMin, double reMax, double imMin, double imMax) {
 			this.data = data;
 			
 			this.width = width;
@@ -211,63 +216,84 @@ public class Newton {
 			this.reMax = reMax;
 			this.imMin = imMin;
 			this.imMax = imMax;
-			
-			this.polynomial = polynomial;
-			this.polynomialRooted = polynomialRooted;
 		}
 
 		@Override
 		public Void call() throws Exception {
-			final int MAX_ITER = 64;
-			final double THRESHOLD = 0.001;
+			IComplexCache cache = ComplexCache.getCache();
 			
 			int offset = yStart * width;
 			
 			for(int y = yStart; y < yEnd; y++) {
 				for(int x = 0; x < width; x++) {
 					Complex zn = mapToComplexPlain(x, y, width, height, reMin, reMax, imMin, imMax);
-					Complex znold;
+					Complex znOld;
+					Complex numerator;
+					Complex denominator;
+					
 					int iter = 0;
+					double module;
 
 					do {
-						Complex numerator = polynomial.apply(zn);
-						Complex denominator = polynomial.derive().apply(zn);
-						znold = zn;
-						Complex fraction = numerator.divide(denominator);
-						zn = zn.sub(fraction);
+						numerator = polynomialRooted.apply(zn);
+						denominator = derived.apply(zn);
+						znOld = zn;
+						
+						numerator.modifyDivide(denominator);
+						
+						Complex znCopy = cache.get(zn);
+						znCopy.modifySub(numerator);
+						zn = znCopy;
 
+						Complex znOldCopy = cache.get(znOld);
+						znOldCopy.modifySub(zn);
+						
+						module = znOldCopy.module();
 						iter++;
-					} while (znold.sub(zn).module() > THRESHOLD && iter < MAX_ITER);
+						
+						cache.release(znCopy);
+						cache.release(numerator);
+						cache.release(denominator);
+						cache.release(znOldCopy);
+						
+					} while (module > THRESHOLD && iter < MAX_ITER);
+					
+//					System.out.println(cache.size());
 
 					int index = polynomialRooted.indexOfClosestRootFor(zn, THRESHOLD);
 					data[offset++] = (short) (index + 1);
+					
+					cache.release(zn);
 				}
 			}
 			
 			return null;
 		}
-	}
-	
-	/**
-	 * Maps the given (x, y) screen coordinate to the complex number.
-	 *
-	 * @param x the x coordinate
-	 * @param y the y coordinate
-	 * @param w the screen width in pixels
-	 * @param h the screen height in pixels
-	 * @param uMin the minimum real point
-	 * @param uMax the maximum real point
-	 * @param vMin the minimum imaginary point
-	 * @param vMax the maximum imaginary point
-	 * @return the complex number at point (x, y)
-	 */
-	private static Complex mapToComplexPlain(int x, int y, int w, int h,
-											 double uMin, double uMax,
-											 double vMin, double vMax) {
-		double re = x / (w-1.0) * (uMax - uMin) + uMin;
-		double im = (h-1.0-y) / (h-1) * (vMax - vMin) + vMin;
 		
-		return new Complex(re, im);
+		/**
+		 * Maps the given (x, y) screen coordinate to the complex number.
+		 *
+		 * @param x the x coordinate
+		 * @param y the y coordinate
+		 * @param w the screen width in pixels
+		 * @param h the screen height in pixels
+		 * @param uMin the minimum real point
+		 * @param uMax the maximum real point
+		 * @param vMin the minimum imaginary point
+		 * @param vMax the maximum imaginary point
+		 * @return the complex number at point (x, y)
+		 */
+		private static Complex mapToComplexPlain(int x, int y, int w, int h,
+												 double uMin, double uMax,
+												 double vMin, double vMax) {
+			double re = x / (w-1.0) * (uMax - uMin) + uMin;
+			double im = (h-1.0-y) / (h-1) * (vMax - vMin) + vMin;
+			
+			IComplexCache cache = ComplexCache.getCache();
+			Complex result = cache.get(re, im);
+			
+			return result;
+		}
 	}
 	
 	/**
@@ -340,6 +366,20 @@ public class Newton {
 		return im;
 	}
 	
+	private static class CustomThread extends Thread implements IThreadBoundComplexCache {
+		
+		private IComplexCache cache = new ComplexCacheImpl();
+		
+		public CustomThread(Runnable r) {
+			super(r);
+		}
+		
+		@Override
+		public IComplexCache getComplexCache() {
+			return cache;
+		}
+	};
+	
 	/**
 	 * A simple {@code ThreadFactory} that produces exclusively <i>daemonic</i> threads.
 	 *
@@ -349,7 +389,7 @@ public class Newton {
 
 		@Override
 		public Thread newThread(Runnable r) {
-			Thread thread = new Thread(r);
+			CustomThread thread = new CustomThread(r);
 			thread.setDaemon(true);
 			return thread;
 		}

@@ -26,16 +26,15 @@ public class Complex {
 	public static final Complex IM_NEG = new Complex(0,-1);
 	
 	/** Real part of this imaginary number. */
-	private final double real;
+	private double real;
 	
 	/** Imaginary part of this imaginary number. */
-	private final double imaginary;
+	private double imaginary;
 	
 	/**
 	 * Constructs a complex number 0 + 0i.
 	 */
 	public Complex() {
-		this(0, 0);
 	}
 	
 	/**
@@ -72,6 +71,18 @@ public class Complex {
 	}
 	
 	/**
+	 * Adds the given complex number to this number. This
+	 * will change this object.
+	 *
+	 * @param c the adding complex number
+	 */
+	public void modifyAdd(Complex c) {
+		Objects.requireNonNull(c);
+		this.real += c.real;
+		this.imaginary += c.imaginary;
+	}
+	
+	/**
 	 * Subtracts this complex number with the given one, and
 	 * returns a new complex number as a result.
 	 * 
@@ -81,6 +92,18 @@ public class Complex {
 	public Complex sub(Complex c) {
 		Objects.requireNonNull(c);
 		return new Complex(real - c.real, imaginary - c.imaginary);
+	}
+	
+	/**
+	 * Subtracts the given complex number to this number. This
+	 * will change this object.
+	 *
+	 * @param c the subtracting complex number
+	 */
+	public void modifySub(Complex c) {
+		Objects.requireNonNull(c);
+		this.real -= c.real;
+		this.imaginary -= c.imaginary;
 	}
 	
 	/**
@@ -95,6 +118,22 @@ public class Complex {
 		double re = real * c.real - imaginary * c.imaginary;
 		double im = real * c.imaginary + imaginary * c.real;
 		return new Complex(re, im);
+	}
+	
+	/**
+	 * Multiplies the given complex number with number. The
+	 * result will be stored inside this object, changing it.
+	 *
+	 * @param c the multiplying complex number
+	 */
+	public void modifyMultiply(Complex c) {
+		Objects.requireNonNull(c);
+		
+		double re = real * c.real - imaginary * c.imaginary;
+		double im = real * c.imaginary + imaginary * c.real;
+		
+		this.real 	   = re;
+		this.imaginary = im;
 	}
 	
 	/**
@@ -113,13 +152,38 @@ public class Complex {
 			throw new ArithmeticException("Dividing by zero!");
 		}
 		
-		Complex numerator = this.multiply(c.conjugate());
+//		Complex numerator = this.multiply(c.conjugate()); // allocates every call, don't do this
 		double denominator = c.real * c.real + c.imaginary * c.imaginary;
 		
-		double re = numerator.real / denominator;
-		double im = numerator.imaginary / denominator;
+		double re = (real*c.real + imaginary*c.imaginary) / denominator;
+		double im = (imaginary*c.real - real*c.imaginary) / denominator;
+		
+//		double re = numerator.real / denominator;
+//		double im = numerator.imaginary / denominator;
 				
 		return new Complex(re, im);
+	}
+	
+	/**
+	 * Divides this complex number with the given complex number. The
+	 * result will be stored inside this object, changing it.
+	 *
+	 * @param c the complex number that divides this complex number
+	 */
+	public void modifyDivide(Complex c) {
+		Objects.requireNonNull(c);
+		
+		if(c.real == 0 && c.imaginary == 0) {
+			throw new ArithmeticException("Dividing by zero!");
+		}
+		
+		double denominator = c.real * c.real + c.imaginary * c.imaginary;
+		
+		double re = (real*c.real + imaginary*c.imaginary) / denominator;
+		double im = (imaginary*c.real - real*c.imaginary) / denominator;
+		
+		this.real      = re;
+		this.imaginary = im;
 	}
 	
 	/**
@@ -137,10 +201,28 @@ public class Complex {
 		double magnitudeToPowerN = Math.pow(module(), n);
 		double angleTimesN = getAngle() * n;
 		
-		double real = magnitudeToPowerN * Math.cos(angleTimesN);
+		double re = magnitudeToPowerN * Math.cos(angleTimesN);
 		double im = magnitudeToPowerN * Math.sin(angleTimesN);
 		
-		return new Complex(real, im);
+		return new Complex(re, im);
+	}
+	
+	/**
+	 * Calculates the n-th power of this complex number and stores
+	 * the result in this complex number.
+	 *
+	 * @param n the power
+	 */
+	public void modifyPower(int n) {
+		if(n < 0) {
+			throw new IllegalArgumentException("Power should be non-negative number!");
+		}
+		
+		double magnitudeToPowerN = Math.pow(module(), n);
+		double angleTimesN = getAngle() * n;
+		
+		this.real = magnitudeToPowerN * Math.cos(angleTimesN);
+		this.imaginary = magnitudeToPowerN * Math.sin(angleTimesN);
 	}
 	
 	/**
@@ -184,6 +266,14 @@ public class Complex {
 		return new Complex(-real, -imaginary);
 	}
 	
+	/**
+	 * Negates this complex number, changing it.
+	 */
+	public void modifyNegate() {
+		this.real = -real;
+		this.imaginary = -imaginary;
+	}
+	
 	//----------------------------------------------------------------------
 	//					hashCode, equals, toString
 	//----------------------------------------------------------------------
@@ -221,9 +311,9 @@ public class Complex {
 	/**
 	 * @return conjugate of this complex number.
 	 */
-	private Complex conjugate() {
-		return new Complex(real, -imaginary);
-	}
+//	private Complex conjugate() {
+//		return new Complex(real, -imaginary);
+//	}
 	
 	/**
 	 * Returns the angle that line from this complex number to
@@ -252,6 +342,28 @@ public class Complex {
 	 */
 	public double getImaginary() {
 		return imaginary;
+	}
+	
+	//----------------------------------------------------------------------
+	//								SETTERS
+	//----------------------------------------------------------------------
+	
+	/**
+	 * Sets the new value for the real part.
+	 *
+	 * @param real the new real part value
+	 */
+	public void setReal(double real) {
+		this.real = real;
+	}
+	
+	/**
+	 * Sets the new value for the imaginary part.
+	 *
+	 * @param imaginary the new imaginary part value
+	 */
+	public void setImaginary(double imaginary) {
+		this.imaginary = imaginary;
 	}
 }
 

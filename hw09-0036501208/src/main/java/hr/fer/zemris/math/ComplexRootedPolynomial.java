@@ -2,6 +2,9 @@ package hr.fer.zemris.math;
 
 import java.util.Objects;
 
+import hr.fer.zemris.java.fractals.cmplxcache.ComplexCache;
+import hr.fer.zemris.java.fractals.cmplxcache.IComplexCache;
+
 /**
  * Models a function in the complex domain of the following
  * format:
@@ -45,13 +48,24 @@ public class ComplexRootedPolynomial {
 	 * @param z the point of function evaluation
 	 * @return the polynomial value at the given point {@code z}
 	 */
-	public Complex apply(Complex z) {
-		Complex result = constant;
+	public Complex apply(Complex z) {		
+//		for(Complex zi : roots) {
+//			if(zi == null) continue;
+//			Complex parenthesis = z.sub(zi);
+//			result = result.multiply(parenthesis);
+//		}
 		
-		for(Complex zi : roots) {
-			if(zi == null) continue;
-			Complex parenthesis = z.sub(zi);
-			result = result.multiply(parenthesis);
+		IComplexCache cache = ComplexCache.getCache();
+		Complex result = cache.get(constant);
+		
+		for(int i = 0; i < roots.length; i++) {
+			if(roots[i] == null) continue;
+			Complex parenthesis = cache.get(z);
+			
+			parenthesis.modifySub(roots[i]);
+			result.modifyMultiply(parenthesis);
+			
+			cache.release(parenthesis);
 		}
 		
 		return result;
@@ -91,17 +105,25 @@ public class ComplexRootedPolynomial {
 	 * 		   found, otherwise {@code -1}
 	 */
 	public int indexOfClosestRootFor(Complex z, double threshold) {
+		IComplexCache cache = ComplexCache.getCache();
+		
 		double minDistance = threshold;
 		int indexOfClosestRoot = -1;
 		
 		for(int i = 0; i < roots.length; i++) {
 			if(roots[i] == null) continue;
-			double distance = (z.sub(roots[i])).module();
+			
+			Complex zSubtracted = cache.get(z);
+			zSubtracted.modifySub(roots[i]);
+			
+			double distance = zSubtracted.module();
 			
 			if(distance < minDistance) {
 				minDistance = distance;
 				indexOfClosestRoot = i;
 			}
+			
+			cache.release(zSubtracted);
 		}
 		
 		return indexOfClosestRoot;
