@@ -2,21 +2,24 @@ package hr.fer.zemris.java.gui.calc;
 
 import java.awt.Color;
 import java.awt.Container;
-import java.awt.Font;
+import java.awt.Dimension;
+import java.awt.LayoutManager;
+import java.awt.Toolkit;
 import java.awt.event.ActionListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 import java.util.Stack;
 import java.util.function.DoubleBinaryOperator;
 import java.util.function.DoubleUnaryOperator;
 
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 
-import hr.fer.zemris.java.gui.calc.model.BinaryCalculatorOperations;
 import hr.fer.zemris.java.gui.calc.model.CalculatorInputException;
-import hr.fer.zemris.java.gui.calc.model.UnaryCalculatorOperations;
 import hr.fer.zemris.java.gui.layouts.CalcLayout;
 
 /**
@@ -48,8 +51,11 @@ public class Calculator extends JFrame {
 	/** Reference to the content pane of this frame. */
 	private Container contentPane = getContentPane();
 	
-	/** The default font used by the components. */
-	private final Font DEFAULT_FONT = new Font(getContentPane().getFont().getName(), Font.PLAIN, 32);
+	/** Check-box used to invert the operations in this calculator. */
+	private JCheckBox checkBox = new JCheckBox("Inv");
+	
+	/** The default font size used by the components. */
+	private static final float FONT_SIZE = 30f;
 	
 	/**
 	 * Constructs a new calculator which will automatically
@@ -64,6 +70,10 @@ public class Calculator extends JFrame {
 	 */
 	private void initGUI() {
 		contentPane.setLayout(new CalcLayout(5));
+		
+		// Inverse operation check-box.
+		contentPane.add(checkBox, "5,7");
+		checkBox.setFont(checkBox.getFont().deriveFont(FONT_SIZE));
 		
 		// First row
 		initDisplay();
@@ -83,24 +93,31 @@ public class Calculator extends JFrame {
 		initResetButton();
 		initStackButtons();
 		
+		// Positioning in the middle of the screen,
+		// independent of the screen resolution.
+		Dimension screen = Toolkit.getDefaultToolkit().getScreenSize();
+		Dimension pane = contentPane.getPreferredSize();
+		
+		setLocation((screen.width - pane.width) / 2,
+					(screen.height - pane.height) / 2);
+		
 		// Configuration
 		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
-		setLocation(300, 200);
-		setSize(800, 500);
 		setVisible(true);
+		pack();
 	}
-	
+
 	private void initEqualsButton() {
 		ActionListener listener = event -> {
 			DoubleBinaryOperator op = calculator.getPendingBinaryOperation();
 			
 			if(!calculator.isActiveOperandSet()) {
-				JOptionPane.showMessageDialog(this, "Operand not yet set.", "Error", JOptionPane.ERROR_MESSAGE);
+				JOptionPane.showMessageDialog(this, "Operand has not been set.", "Error", JOptionPane.ERROR_MESSAGE);
 				return;
 			}
 			
 			if(op == null) {
-				JOptionPane.showMessageDialog(this, "Operation not yet set.", "Error", JOptionPane.ERROR_MESSAGE);
+				JOptionPane.showMessageDialog(this, "Operation has not been set.", "Error", JOptionPane.ERROR_MESSAGE);
 				return;
 			}
 
@@ -110,40 +127,22 @@ public class Calculator extends JFrame {
 		
 		createButton("=", "1,6", listener);
 	}
-
-	private void initDecimalPointButton() {
-		ActionListener listener = event -> {
-			try {
-				calculator.insertDecimalPoint();
-			} catch(CalculatorInputException e) {
-				JOptionPane.showMessageDialog(this, e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
-			}
-		};
-		
-		createButton(".", "5,5", listener);
-	}
-	
-	private void initSwapSignButton() {
-		ActionListener listener = event -> {
-			try {
-				calculator.swapSign();
-			} catch(CalculatorInputException e) {
-				JOptionPane.showMessageDialog(this, e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
-			}
-		};
-		
-		createButton("+/-", "5,4", listener);
-	}
 	
 	//-------------------------------------------------------------------------
 	//						  CLEARING OPERATIONS
 	//-------------------------------------------------------------------------
 	
+	/**
+	 * Initializes the clear button.
+	 */
 	private void initClearButton() {
 		ActionListener listener = event -> calculator.clear();
 		createButton("clr", "1,7", listener);
 	}
 	
+	/**
+	 * Initializes the reset button.
+	 */
 	private void initResetButton() {
 		ActionListener listener = event -> calculator.clearAll();
 		createButton("reset", "2,7", listener);
@@ -153,6 +152,9 @@ public class Calculator extends JFrame {
 	//							STACK OPERATIONS
 	//-------------------------------------------------------------------------
 	
+	/**
+	 * Initializes the stack buttons.
+	 */
 	private void initStackButtons() {
 		createButton("push", "3,7", event -> stack.push(calculator.getValue()));
 		createButton("pop", "4,7", event -> {
@@ -168,59 +170,105 @@ public class Calculator extends JFrame {
 	//							UNARY OPERATIONS
 	//-------------------------------------------------------------------------
 	
+	/**
+	 * Initializes the unary operation buttons.
+	 */
 	private void initUnaryOperationButtons() {
-		createUnaryOperationButton("1/x", "2,1", UnaryCalculatorOperations.INVERSE);
-		createUnaryOperationButton("log", "3,1", UnaryCalculatorOperations.LOG);
-		createUnaryOperationButton("ln", "4,1", UnaryCalculatorOperations.LN);
+		createUnaryOperationButton("1/x", x -> 1/x, "2,1");
+		createInverseUnaryOperationButton("log", x -> Math.log10(x), "10^x", x -> Math.pow(10, x), "3,1");
+		createInverseUnaryOperationButton("ln", x -> Math.log(x), "e^x", x -> Math.pow(Math.E, x), "4,1");
 		
-		createUnaryOperationButton("sin", "2,2", UnaryCalculatorOperations.SIN);
-		createUnaryOperationButton("cos", "3,2", UnaryCalculatorOperations.COS);
-		createUnaryOperationButton("tan", "4,2", UnaryCalculatorOperations.TAN);
-		createUnaryOperationButton("ctg", "5,2", UnaryCalculatorOperations.CTG);
+		createInverseUnaryOperationButton("sin", x -> Math.sin(x), "arcsin", x -> Math.asin(x), "2,2");
+		createInverseUnaryOperationButton("cos", x -> Math.cos(x), "arccos", x -> Math.acos(x), "3,2");
+		createInverseUnaryOperationButton("tan", x -> Math.tan(x), "arctan", x -> Math.atan(x), "4,2");
+		createInverseUnaryOperationButton("ctg", x -> 1/Math.tan(x), "arcctg", x -> Math.atan(1/x), "5,2");
 	}
 	
-	private void createUnaryOperationButton(String text, String position, DoubleUnaryOperator operator) {
+	/**
+	 * Helper factory method that creates the unary operation button
+	 * from the specified parameters.
+	 *
+	 * @param title the title of the button 
+	 * @param operator the operation this button performs
+	 * @param position the layout position
+	 */
+	private void createUnaryOperationButton(String title, DoubleUnaryOperator operator, String position) {
 		ActionListener listener = event -> calculator.setValue(operator.applyAsDouble(calculator.getValue()));
-		createButton(text, position, listener);
+		createButton(title, position, listener);
+	}
+	
+	/**
+	 * Helper factory method that creates an inverse unary operation button.
+	 *
+	 * @param operationTitle the operation title
+	 * @param operation the operation
+	 * @param inverseTitle the inverse operation title
+	 * @param inverse the inverse operation
+	 * @param position the layout position
+	 */
+	private void createInverseUnaryOperationButton(String operationTitle, DoubleUnaryOperator operation,
+												   String inverseTitle, DoubleUnaryOperator inverse,
+												   String position) {
+		ActionListener performOperation = event -> calculator.setValue(operation.applyAsDouble(calculator.getValue()));
+		ActionListener performInverse   = event -> calculator.setValue(inverse.applyAsDouble(calculator.getValue()));
+		
+		createInverseOperationButton(operationTitle, performOperation, inverseTitle, performInverse, position);
 	}
 	
 	//-------------------------------------------------------------------------
 	//							BINARY OPERATIONS
 	//-------------------------------------------------------------------------
 	
+	/**
+	 * Initializes the binary operation buttons.
+	 */
 	private void initBinaryOperationButtons() {
-		createBinaryOperationButton("/", "2,6", BinaryCalculatorOperations.DIV);
-		createBinaryOperationButton("*", "3,6", BinaryCalculatorOperations.MUL);
-		createBinaryOperationButton("-", "4,6", BinaryCalculatorOperations.SUB);
-		createBinaryOperationButton("+", "5,6", BinaryCalculatorOperations.ADD);
-		createBinaryOperationButton("x^n", "5,1", BinaryCalculatorOperations.X_POWER_N);
-	}
-	
-	private void createBinaryOperationButton(String text, String position, DoubleBinaryOperator operator) {
-		ActionListener listener = event -> {
-			double onScreenValue = calculator.getValue();
-			
-			if(calculator.isActiveOperandSet()) {
-				double savedValue = calculator.getActiveOperand();
-				DoubleBinaryOperator op = calculator.getPendingBinaryOperation();
-				calculator.setActiveOperand(op.applyAsDouble(savedValue, onScreenValue));
-				
-			} else {
-				calculator.setActiveOperand(onScreenValue);
-				
-			}
-			
-			calculator.clear();
-			calculator.setPendingBinaryOperation(operator);
-		};
+		createBinaryOperationButton("/", (d1, d2) -> d1 / d2, "2,6");
+		createBinaryOperationButton("*", (d1, d2) -> d1 * d2, "3,6");
+		createBinaryOperationButton("-", (d1, d2) -> d1 - d2, "4,6");
+		createBinaryOperationButton("+", (d1, d2) -> d1 + d2, "5,6");
 		
-		createButton(text, position, listener);
+		createInverseBinaryOperationButton("x^n", (x, n) -> Math.pow(x, n), "x^(1/n)", (x, n) -> Math.pow(x, 1/n), "5,1");
 	}
 	
+	/**
+	 * Helper factory method that creates the binary operation button
+	 * from the specified parameters.
+	 *
+	 * @param title the title of the button 
+	 * @param operator the operation this button performs
+	 * @param position the layout position
+	 */
+	private void createBinaryOperationButton(String title, DoubleBinaryOperator operator, String position) {
+		ActionListener listener = event -> onBinaryOperatorClick(operator);
+		createButton(title, position, listener);
+	}
+	
+	/**
+	 * Helper factory method that creates an inverse binary operation button.
+	 *
+	 * @param operationTitle the operation title
+	 * @param operation the operation
+	 * @param inverseTitle the inverse operation title
+	 * @param inverse the inverse operation
+	 * @param position the layout position
+	 */
+	private void createInverseBinaryOperationButton(String operationTitle, DoubleBinaryOperator operation,
+													String inverseTitle, DoubleBinaryOperator inverse,
+												    String position) {
+		ActionListener performOperation = event -> onBinaryOperatorClick(operation);
+		ActionListener performInverse = event -> onBinaryOperatorClick(inverse);
+		
+		createInverseOperationButton(operationTitle, performOperation, inverseTitle, performInverse, position);
+	}
+
 	//-------------------------------------------------------------------------
-	//							DIGIT BUTTONS 
+	//							INPUT BUTTONS 
 	//-------------------------------------------------------------------------
 	
+	/**
+	 * Initializes the calculator digit buttons.
+	 */
 	private void initDigitButtons() {
 		ActionListener listener = event -> {
 			if(!calculator.isEditable()) {
@@ -242,21 +290,40 @@ public class Calculator extends JFrame {
 		createButton("7", "2,3", listener);
 		createButton("8", "2,4", listener);
 		createButton("9", "2,5", listener);
+	}
+	
+	/**
+	 * Initializes the calculator decimal point button.
+	 */
+	private void initDecimalPointButton() {
+		ActionListener listener = event -> {
+			try {
+				calculator.insertDecimalPoint();
+			} catch(CalculatorInputException e) {
+				JOptionPane.showMessageDialog(this, e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+			}
+		};
 		
-//		int buttonNumber = 1;
-//		for(int row = 4; row >= 2; row--) {
-//			for(int column = 3; column <= 5; column++) {
-//				JButton button = new JButton(String.valueOf(buttonNumber));
-//				contentPane.add(button, new RCPosition(row, column));
-//				button.setFont(DEFAULT_FONT);
-//				
-//				buttonNumber++;
-//			}
-//		}
+		createButton(".", "5,5", listener);
+	}
+	
+	/**
+	 * Initializes the calculator swap sign button.
+	 */
+	private void initSwapSignButton() {
+		ActionListener listener = event -> {
+			try {
+				calculator.swapSign();
+			} catch(CalculatorInputException e) {
+				JOptionPane.showMessageDialog(this, e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+			}
+		};
+		
+		createButton("+/-", "5,4", listener);
 	}
 	
 	//-------------------------------------------------------------------------
-	//							HELPER METHODS 
+	//							FACTORY METHODS 
 	//-------------------------------------------------------------------------
 	
 	/**
@@ -268,23 +335,90 @@ public class Calculator extends JFrame {
 	 * @param listener the action to be performed by this button
 	 */
 	private void createButton(String text, String position, ActionListener listener) {
-		JButton button = new JButton(text);
+		JButton button = createButton(text, FONT_SIZE);
 		button.addActionListener(listener);
 		contentPane.add(button, position);
+	}
+	
+	/**
+	 * Creates a button with the specified text and font size.
+	 *
+	 * @param text the text
+	 * @param fontSize the font size
+	 * @return a button with the specified text and font size
+	 */
+	private JButton createButton(String text, float fontSize) {
+		JButton button = new JButton(text);
+		button.setFont(button.getFont().deriveFont(fontSize));
+		return button;
+	}
+	
+	/**
+	 * Creates a button which will change its functionality once the check-box
+	 * is clicked.
+	 *
+	 * @param operationTitle the operation title
+	 * @param performOperation the operation functionality
+	 * @param inverseTitle the inverse operation title
+	 * @param performInverse the inverse operation functionality
+	 * @param position the layout position
+	 */
+	private void createInverseOperationButton(String operationTitle, ActionListener performOperation,
+											  String inverseTitle, ActionListener performInverse,
+											  String position) {
+		var swappable = new SwappableButton(operationTitle, inverseTitle, performOperation, performInverse); 
+		checkBox.addItemListener(swappable);
+		contentPane.add(swappable.getButton(), position);
 	}
 	
 	//-------------------------------------------------------------------------
 	//								DISPLAY 
 	//-------------------------------------------------------------------------
 
+	/**
+	 * Initializes the calculator display.
+	 */
 	private void initDisplay() {
 		Display display = new Display("0", SwingConstants.RIGHT);
-		display.setFont(DEFAULT_FONT);
+		display.setFont(display.getFont().deriveFont(FONT_SIZE * 2));
 		display.setBackground(Color.YELLOW);
 		display.setOpaque(true);
 		
 		contentPane.add(display, "1,1");
 		calculator.addCalcValueListener(display);
+	}
+	
+	//-------------------------------------------------------------------------
+	//							HELPER METHODS 
+	//-------------------------------------------------------------------------
+	
+	/**
+	 * A helper method which sets resolves the binary operator click. It works by checking
+	 * if there already is an active operand set and decides the following action:
+	 * <br>
+	 * <br> a) If not set, simply set the current on screen value to the active operand.
+	 * <br> b) If set, calculate the new value based on the given operator and save the 
+	 * 		   result to as the active operand.
+	 * <p>
+	 * After the operator click, clears the screen and changes the pending operator
+	 *
+	 * @param operator the operator strategy which holds the operation
+	 */
+	private void onBinaryOperatorClick(DoubleBinaryOperator operator) {
+		double onScreenValue = calculator.getValue();
+		
+		if(calculator.isActiveOperandSet()) {
+			double savedValue = calculator.getActiveOperand();
+			DoubleBinaryOperator op = calculator.getPendingBinaryOperation();
+			calculator.setActiveOperand(op.applyAsDouble(savedValue, onScreenValue));
+			
+		} else {
+			calculator.setActiveOperand(onScreenValue);
+			
+		}
+		
+		calculator.clear();
+		calculator.setPendingBinaryOperation(operator);
 	}
 
 	//-------------------------------------------------------------------------
@@ -301,5 +435,76 @@ public class Calculator extends JFrame {
 		SwingUtilities.invokeLater(() -> {
 			new Calculator();
 		});
+	}
+	
+	//-------------------------------------------------------------------------
+	//							STATIC CLASSES 
+	//-------------------------------------------------------------------------
+	
+	/**
+	 * Models a button which has 2 functionalities which will
+	 * be swapped once the subject's event triggers.
+	 *
+	 * @author Filip Nemec
+	 */
+	private class SwappableButton implements ItemListener {
+		
+		/** The button. */
+		private JButton button;
+		
+		/** The first title which represents the first functionality. */
+		private String title1;
+		
+		/** The second title which represents the second functionality. */
+		private String title2;
+		
+		/** The first functionality. */
+		private ActionListener action1;
+		
+		/** The second functionality. */
+		private ActionListener action2;
+		
+		/**
+		 * Constructs a new swappable button.
+		 *
+		 * @param title1 the title which represents the first functionality
+		 * @param title2 the title which represents the second functionality
+		 * @param action1 the first functionality
+		 * @param action2 the second functionality
+		 */
+		public SwappableButton(String title1, String title2,
+							   ActionListener action1, ActionListener action2) {
+			this.title1 = title1;
+			this.title2 = title2;
+			this.action1 = action1;
+			this.action2 = action2;
+			
+			button = createButton(title1, FONT_SIZE);
+			button.addActionListener(action1);
+		}
+
+		@Override
+		public void itemStateChanged(ItemEvent e) {
+			if(e.getStateChange() == ItemEvent.SELECTED) {
+				button.setText(title2);
+				button.addActionListener(action2);
+				button.removeActionListener(action1);
+				
+			} else {
+				button.setText(title1);
+				button.addActionListener(action1);
+				button.removeActionListener(action2);
+				
+			}
+		}
+		
+		/**
+		 * Returns the {@code JButton} this swappable button encapsulates.
+		 *
+		 * @return the {@code JButton} this swappable button encapsulates
+		 */
+		public JButton getButton() {
+			return button;
+		}
 	}
 }

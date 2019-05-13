@@ -16,22 +16,31 @@ import hr.fer.zemris.java.gui.calc.model.CalculatorInputException;
  */
 public class CalcModelImpl implements CalcModel {
 	
-	private static final double DEFAULT_VALUE = 0;
-	
-	private static final String DEFAULT_VALUE_STRING = "0";
-	
+	/** A list of all the subscribed listeners. */
 	private List<CalcValueListener> listeners = new LinkedList<>();
 	
+	/** The default display value. */
+	private static final double DEFAULT_VALUE = 0;
+	
+	/** The default display value represented as a {@code String}. */
+	private static final String DEFAULT_VALUE_STRING = "";
+	
+	/** If this calculator is currently editable. */
 	private boolean isEditable = true;
 	
+	/** If the display value is currently positive. */
 	private boolean isPositive = true;
 	
+	/** The current value stored by this calculator. */
 	private double value = DEFAULT_VALUE;
 	
+	/** The current value stored by this calculator represented as a {@code String}. */
 	private String valueString = DEFAULT_VALUE_STRING;
 	
+	/** The operand stored by the previous operation, or is waiting to be operated on. */
 	private Double activeOperand = null;
 	
+	/** The operation currently used by this calculator. */
 	private DoubleBinaryOperator pendingOperation = null;
 	
 
@@ -55,7 +64,7 @@ public class CalcModelImpl implements CalcModel {
 			throw new CalculatorInputException("Decimal point already exists in the current number.");
 		
 		if(valueString.isEmpty())
-			throw new CalculatorInputException("Can't append decimal point if no numbers have been set.");
+			throw new CalculatorInputException("Input is empty, please insert a number first.");
 		
 		valueString += ".";
 		notifyListeners();
@@ -105,10 +114,8 @@ public class CalcModelImpl implements CalcModel {
 	
 	@Override
 	public double getActiveOperand() throws IllegalStateException {
-//		if(activeOperand == null)
-//			throw new IllegalStateException("Active operand has not been set.");
-		
-		if(activeOperand == null) return -122;
+		if(activeOperand == null)
+			throw new IllegalStateException("Active operand has not been set.");
 		
 		return activeOperand;
 	}
@@ -134,8 +141,10 @@ public class CalcModelImpl implements CalcModel {
 	
 	@Override
 	public void setValue(double value) {
-		this.value = value;
-		valueString = String.valueOf(value);
+		isPositive = value >= 0 ? true : false;
+		
+		this.value = Math.abs(value);
+		valueString = String.valueOf(this.value);
 		isEditable = false;
 		
 		notifyListeners();
@@ -165,6 +174,7 @@ public class CalcModelImpl implements CalcModel {
 		value = DEFAULT_VALUE;
 		valueString = DEFAULT_VALUE_STRING;
 		isEditable = true;
+		isPositive = true;
 		
 		notifyListeners();
 	}
@@ -173,7 +183,7 @@ public class CalcModelImpl implements CalcModel {
 	public void clearAll() {
 		activeOperand = null;
 		pendingOperation = null;
-		isEditable = true;
+		
 		clear();
 	}
 	
@@ -209,20 +219,9 @@ public class CalcModelImpl implements CalcModel {
 	
 	@Override
 	public String toString() {
-		if(valueString.isEmpty()) {
-			if(isPositive) {
-				return "0";
-			} else {
-				return "-0";
-			}
-		}
+		if(valueString.isEmpty())
+			return isPositive ? "0" : "-0";
 		
-		if(Double.isFinite(value)) {
-			return isPositive ? valueString : "-" + valueString;
-			
-		} else {
-			return valueString;
-			
-		}
+		return isPositive ? valueString : "-" + valueString;
 	}
 }
