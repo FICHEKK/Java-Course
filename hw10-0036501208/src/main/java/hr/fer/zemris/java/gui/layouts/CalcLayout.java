@@ -47,7 +47,6 @@ public class CalcLayout implements LayoutManager2 {
 	public CalcLayout(int gap) {
 		this.gap = gap;
 	}
-	
 
 	@Override
 	public void addLayoutComponent(String name, Component comp) {
@@ -67,8 +66,6 @@ public class CalcLayout implements LayoutManager2 {
 			}
 		}
 	}
-
-
 
 	@Override
 	public void layoutContainer(Container parent) {
@@ -132,12 +129,6 @@ public class CalcLayout implements LayoutManager2 {
 	}
 
 	@Override
-	public void invalidateLayout(Container target) {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
 	public void addLayoutComponent(Component comp, Object constraints) {
 		RCPosition p = validateConstraints(constraints);
 		int X = p.column - 1;
@@ -158,37 +149,17 @@ public class CalcLayout implements LayoutManager2 {
 	
 	@Override
 	public Dimension preferredLayoutSize(Container parent) {
-		int width = 0;
-		int height = 0;
-		
-		Dimension maxDimension = getMaximumPreferredDimension(parent);
-		
-		// Adding component dimensions
-		width += maxDimension.width * COLUMNS;
-		height += maxDimension.height * ROWS;
-		
-		// Adding spaces between components
-		width += (COLUMNS - 1) * gap;
-		height += (ROWS - 1) * gap;
-		
-		// Adding insets
-		Insets insets = parent.getInsets();
-		width += insets.left + insets.right;
-		height += insets.top + insets.bottom;
-		
-		return new Dimension(width, height);
+		return getLayoutSize(parent, Component::getPreferredSize);
 	}
 	
 	@Override
 	public Dimension minimumLayoutSize(Container parent) {
-		// TODO Auto-generated method stub
-		return null;
+		return getLayoutSize(parent, Component::getMinimumSize);
 	}
 	
 	@Override
 	public Dimension maximumLayoutSize(Container target) {
-		// TODO Auto-generated method stub
-		return null;
+		return getLayoutSize(target, Component::getMaximumSize);
 	}
 	
 	//-------------------------------------------------------------------
@@ -203,6 +174,10 @@ public class CalcLayout implements LayoutManager2 {
 	@Override
 	public float getLayoutAlignmentY(Container target) {
 		return 0;
+	}
+	
+	@Override
+	public void invalidateLayout(Container target) {
 	}
 	
 	//-------------------------------------------------------------------
@@ -293,15 +268,48 @@ public class CalcLayout implements LayoutManager2 {
 	}
 	
 	/**
-	 * Searches for the maximum preferred width and height of any present
+	 * Returns the layout size. Individual child component sizes will be
+	 * extracted as defined by the given {@code SizeExtractor} argument.
+	 *
+	 * @param parent the {@code Container} whose layout size is being calculated
+	 * @param extractor the component size extractor
+	 * @return the {@code Dimension} instance which holds the layout size
+	 */
+	private Dimension getLayoutSize(Container parent, SizeExtractor extractor) {
+		int width = 0;
+		int height = 0;
+	
+		Dimension maxDimension = getMaximumDimension(parent, extractor);
+		
+		// Adding component dimensions
+		width += maxDimension.width * COLUMNS;
+		height += maxDimension.height * ROWS;
+		
+		// Adding spaces between components
+		width += (COLUMNS - 1) * gap;
+		height += (ROWS - 1) * gap;
+		
+		// Adding insets
+		Insets insets = parent.getInsets();
+		width += insets.left + insets.right;
+		height += insets.top + insets.bottom;
+		
+		return new Dimension(width, height);
+	}
+	
+	/**
+	 * Searches for the maximum width and height sizes of any present
 	 * components and returns those values encapsulated as an instance of
-	 * {@code Dimension} object.
+	 * {@code Dimension} object. Size retrieval is defined by the given
+	 * strategy {@code SizeExtractor}.
 	 *
 	 * @param parent the {@code Container} containing all of the components
+	 * @param extractor the object which defines how component sizes will 
+	 * 					be retrieved from the components
 	 * @return the {@code Dimension} containing the maximum preferred 
 	 * 		   width and height
 	 */
-	private Dimension getMaximumPreferredDimension(Container parent) {
+	private Dimension getMaximumDimension(Container parent, SizeExtractor extractor) {
 		int maxWidth = 0;
 		int maxHeight = 0;
 		
@@ -310,15 +318,17 @@ public class CalcLayout implements LayoutManager2 {
 				Component c = grid[y][x];
 				if(c == null || !c.isVisible() || (x == 0 && y == 0))
 					continue;
-
-				int preferredWidth = c.getPreferredSize().width;
-				if(preferredWidth > maxWidth) {
-					maxWidth = preferredWidth;
+				
+				Dimension dimension = extractor.getSize(c);
+				
+				int width = dimension.width;
+				if(width > maxWidth) {
+					maxWidth = width;
 				}
 				
-				int preferredHeight = c.getPreferredSize().height;
-				if(preferredHeight > maxHeight) {
-					maxHeight = preferredHeight;
+				int height = dimension.height;
+				if(height > maxHeight) {
+					maxHeight = height;
 				}
 			}
 		}
@@ -338,5 +348,23 @@ public class CalcLayout implements LayoutManager2 {
 		}
 		
 		return new Dimension(maxWidth, maxHeight);
+	}
+	
+	/**
+	 * Models objects which define how the size should be extracted
+	 * from the given component.
+	 *
+	 * @author Filip Nemec
+	 */
+	@FunctionalInterface
+	private interface SizeExtractor {
+		
+		/**
+		 * Extracts the size from the component.
+		 *
+		 * @param component the component
+		 * @return the size from the component
+		 */
+		Dimension getSize(Component component);
 	}
 }

@@ -3,7 +3,6 @@ package hr.fer.zemris.java.gui.calc;
 import java.awt.Color;
 import java.awt.Container;
 import java.awt.Dimension;
-import java.awt.LayoutManager;
 import java.awt.Toolkit;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
@@ -175,12 +174,12 @@ public class Calculator extends JFrame {
 	 */
 	private void initUnaryOperationButtons() {
 		createUnaryOperationButton("1/x", x -> 1/x, "2,1");
-		createInverseUnaryOperationButton("log", x -> Math.log10(x), "10^x", x -> Math.pow(10, x), "3,1");
-		createInverseUnaryOperationButton("ln", x -> Math.log(x), "e^x", x -> Math.pow(Math.E, x), "4,1");
+		createInverseUnaryOperationButton("log", Math::log10, "10^x", x -> Math.pow(10, x), "3,1");
+		createInverseUnaryOperationButton("ln", Math::log, "e^x", x -> Math.pow(Math.E, x), "4,1");
 		
-		createInverseUnaryOperationButton("sin", x -> Math.sin(x), "arcsin", x -> Math.asin(x), "2,2");
-		createInverseUnaryOperationButton("cos", x -> Math.cos(x), "arccos", x -> Math.acos(x), "3,2");
-		createInverseUnaryOperationButton("tan", x -> Math.tan(x), "arctan", x -> Math.atan(x), "4,2");
+		createInverseUnaryOperationButton("sin", Math::sin, "arcsin", Math::asin, "2,2");
+		createInverseUnaryOperationButton("cos", Math::cos, "arccos", Math::acos, "3,2");
+		createInverseUnaryOperationButton("tan", Math::tan, "arctan", Math::atan, "4,2");
 		createInverseUnaryOperationButton("ctg", x -> 1/Math.tan(x), "arcctg", x -> Math.atan(1/x), "5,2");
 	}
 	
