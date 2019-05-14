@@ -130,7 +130,7 @@ public class Newton {
 					yEnd = height - 1;
 				}
 				
-				var job = new CalculatePortionOfFractalJob(data, width, height, yStart, yEnd, reMin, reMax, imMin, imMax);
+				var job = new CalculatePortionOfFractalJob(data, width, height, yStart, yEnd, reMin, reMax, imMin, imMax, cancel);
 				results.add(pool.submit(job));
 			}
 			
@@ -189,6 +189,9 @@ public class Newton {
 		/** The convergence threshold. */
 		private static final double THRESHOLD = 0.001;
 		
+		/** Checks if the calculation should be cancelled. */
+		private AtomicBoolean cancel;
+		
 		/**
 		 * Constructs a new job that will calculate the portion of the fractal.
 		 *
@@ -201,9 +204,10 @@ public class Newton {
 		 * @param reMax the maximal value on the real axis
 		 * @param imMin the minimal value on the imaginary axis
 		 * @param imMax the maximal value on the imaginary axis
+		 * @param cancel the cancel flag
 		 */
 		public CalculatePortionOfFractalJob(short[] data, int width, int height, int yStart, int yEnd,
-									   double reMin, double reMax, double imMin, double imMax) {
+									   double reMin, double reMax, double imMin, double imMax, AtomicBoolean cancel) {
 			this.data = data;
 			
 			this.width = width;
@@ -216,6 +220,8 @@ public class Newton {
 			this.reMax = reMax;
 			this.imMin = imMin;
 			this.imMax = imMax;
+			
+			this.cancel = cancel;
 		}
 
 		@Override
@@ -226,6 +232,8 @@ public class Newton {
 			
 			for(int y = yStart; y < yEnd; y++) {
 				for(int x = 0; x < width; x++) {
+					if(cancel.get()) return null;
+					
 					Complex zn = mapToComplexPlain(x, y, width, height, reMin, reMax, imMin, imMax);
 					Complex znOld;
 					Complex numerator;

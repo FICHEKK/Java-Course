@@ -1,0 +1,8 @@
+dan
+broj komaraca
+1,4 10,12 20,30 70,100 156,256 222,222 301,182 330,91 365,17
+0
+300
+50
+
+// Ovo je broj komaraca u danu u godini

@@ -14,10 +14,13 @@ import java.util.function.DoubleUnaryOperator;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 
+import hr.fer.zemris.java.gui.calc.model.CalcModel;
+import hr.fer.zemris.java.gui.calc.model.CalcValueListener;
 import hr.fer.zemris.java.gui.calc.model.CalculatorInputException;
 import hr.fer.zemris.java.gui.layouts.CalcLayout;
 
@@ -94,16 +97,18 @@ public class Calculator extends JFrame {
 		
 		// Positioning in the middle of the screen,
 		// independent of the screen resolution.
-		Dimension screen = Toolkit.getDefaultToolkit().getScreenSize();
 		Dimension pane = contentPane.getPreferredSize();
+		setSize((int)(pane.width * 1.25), (int)(pane.height * 1.25));
 		
-		setLocation((screen.width - pane.width) / 2,
-					(screen.height - pane.height) / 2);
+		Dimension frame = getSize();
+		
+		Dimension screen = Toolkit.getDefaultToolkit().getScreenSize();
+		setLocation((screen.width - frame.width) / 2,
+					(screen.height - frame.height) / 2);
 		
 		// Configuration
 		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
-		setVisible(true);
-		pack();
+		setTitle("Calculator");
 	}
 
 	private void initEqualsButton() {
@@ -432,7 +437,7 @@ public class Calculator extends JFrame {
 	 */
 	public static void main(String[] args) {
 		SwingUtilities.invokeLater(() -> {
-			new Calculator();
+			new Calculator().setVisible(true);
 		});
 	}
 	
@@ -504,6 +509,33 @@ public class Calculator extends JFrame {
 		 */
 		public JButton getButton() {
 			return button;
+		}
+	}
+	
+	/**
+	 * Models the display used by the {@link Calculator}.
+	 *
+	 * @author Filip Nemec
+	 */
+	private static class Display extends JLabel implements CalcValueListener {
+		
+		/** Used for serialization. */
+		private static final long serialVersionUID = 1L;
+		
+		/**
+		 * Constructs a new display with the given initial
+		 * text and the specified horizontal alignment.
+		 *
+		 * @param text the initial text
+		 * @param horizontalAlignment the horizontal alignment
+		 */
+		public Display(String text, int horizontalAlignment) {
+			super(text, horizontalAlignment);
+		}
+
+		@Override
+		public void valueChanged(CalcModel model) {
+			SwingUtilities.invokeLater(() -> setText(model.toString()));
 		}
 	}
 }

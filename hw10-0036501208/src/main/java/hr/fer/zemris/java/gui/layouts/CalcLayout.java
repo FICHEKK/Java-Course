@@ -336,12 +336,14 @@ public class CalcLayout implements LayoutManager2 {
 		// Display is a special case which also needs to be checked.
 		Component display = grid[0][0];
 		if(display != null && display.isVisible()) {
-			int displayWidth = (display.getPreferredSize().width - 4 * gap) / 5;
+			Dimension dimension = extractor.getSize(display);
+			
+			int displayWidth = (dimension.width - 4 * gap) / 5;
 			if(displayWidth > maxWidth) {
 				maxWidth = displayWidth;
 			}
 			
-			int displayHeight = display.getPreferredSize().height;
+			int displayHeight = dimension.height;
 			if(displayHeight > maxHeight) {
 				maxHeight = displayHeight;
 			}
