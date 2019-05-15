@@ -15,6 +15,9 @@ import hr.fer.zemris.java.gui.layouts.RCPosition;
 @SuppressWarnings("javadoc")
 public class DemoFrame1 extends JFrame {
 	
+	/** Used for serialization. */
+	private static final long serialVersionUID = 1L;
+
 	public DemoFrame1() {
 		setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
 		setSize(500, 500);

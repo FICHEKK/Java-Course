@@ -19,10 +19,19 @@ import javax.swing.JComponent;
  */
 public class BarChartComponent extends JComponent {
 	
-	private static final int xAxisOffset = 50;
+	/** Used for serialization. */
+	private static final long serialVersionUID = 1L;
+	
+	/** Distance from the edge to the x-axis. */
+	private final int xAxisOffset;
+	
+	/** Distance from the edge to the y-axis. */
 	private final int yAxisOffset;
 	
+	/** Distance from the edge to the x-axis title. */
 	private static final int xAxisTitleOffset = 15;
+	
+	/** Distance from the edge to the y-axis title. */
 	private static final int yAxisTitleOffset = 15;
 	
 	/** The width of the arrow at the end of the axis. */
@@ -31,26 +40,32 @@ public class BarChartComponent extends JComponent {
 	/** The height of the arrow at the end of the axis. */
 	private static final int arrowHeight = 10;
 	
+	/** Length of the axis mark. */
 	private static final int markLength = 10;
 	
+	/** Space between axis arrow and the last mark on the axis. */
 	private static final int spaceBetweenArrowAndLastMark = 10;
 	
-	private static final int xTextOffset = 20;
-	private static final int yTextOffset = 20;
-	
+	/** Reduces the width of the column (on each side). */
 	private static final int columnWidthReduction = 5;
 	
-	private static final Font AXIS_FONT = new Font("Arial", Font.PLAIN, 14);
+	/** Distance from the x-axis to numbers on the x-axis. */
+	private static final int xTextOffset = 20;
 	
-	private static final Font AXIS_FONT_BOLD = new Font("Arial", Font.BOLD, 14);
+	/** Distance from the y-axis to numbers on the y-axis. */
+	private static final int yTextOffset = 20;
 	
+	/** Font used by the axis titles. */
+	private static final Font AXIS_TITLE_FONT = new Font("Arial", Font.PLAIN, 14);
+	
+	/** Font used by the axis marks. */
+	private static final Font AXIS_MARK_FONT = new Font("Arial", Font.BOLD, 14);
+	
+	/** The color of the columns. */
 	private static final Color COLUMN_COLOR = new Color(0, 114, 191);
-	
-
 	
 	/** Object that stores all the bar chart data. */
 	private BarChart chart;
-	
 	
 	/**
 	 * Constructs a new bar chart. It uses information
@@ -61,7 +76,8 @@ public class BarChartComponent extends JComponent {
 	 */
 	public BarChartComponent(BarChart chart) {
 		this.chart = chart;
-		this.yAxisOffset = calculateYAxisOffset();		
+		this.yAxisOffset = calculateYAxisOffset();
+		this.xAxisOffset = calculateXAxisOffset();
 	}
 
 	@Override
@@ -78,15 +94,19 @@ public class BarChartComponent extends JComponent {
 		drawXAxis(g, Color.WHITE);
 		drawYAxis(g, Color.WHITE);
 		
-		drawXAxisMarks(g, Color.WHITE, AXIS_FONT_BOLD);
-		drawYAxisMarks(g, Color.WHITE, AXIS_FONT_BOLD);
+		drawXAxisMarks(g, Color.WHITE, AXIS_MARK_FONT);
+		drawYAxisMarks(g, Color.WHITE, AXIS_MARK_FONT);
 		
 		// title
-		drawXAxisTitle(g, Color.WHITE, AXIS_FONT);
-		drawYAxisTitle(g, Color.WHITE, AXIS_FONT);
+		drawXAxisTitle(g, Color.WHITE, AXIS_TITLE_FONT);
+		drawYAxisTitle(g, Color.WHITE, AXIS_TITLE_FONT);
 		
 		drawColumnRectangles(g, COLUMN_COLOR);
 	}
+	
+	//-----------------------------------------------------------
+	//						COLUMNS
+	//-----------------------------------------------------------
 
 	/**
 	 * Draws the columns based on the data stored in the {@code BarChart}
@@ -123,7 +143,18 @@ public class BarChartComponent extends JComponent {
 			index++;
 		}
 	}
-
+	
+	//-----------------------------------------------------------
+	//						AXIS MARKS
+	//-----------------------------------------------------------
+	
+	/**
+	 * Draws the x-axis marks.
+	 *
+	 * @param g the graphics object used for drawing
+	 * @param color the color of the marks
+	 * @param font the font of the marks
+	 */
 	private void drawXAxisMarks(Graphics g, Color color, Font font) {
 		g.setColor(color);
 		g.setFont(font);
@@ -155,28 +186,14 @@ public class BarChartComponent extends JComponent {
 		// The last mark just before the x-axis arrow.
 		g.drawLine((int)currentX, y1, (int)currentX, y2);
 	}
-	
-	private void drawXGrid(Graphics g, Color gridColor) {
-		g.setColor(gridColor);
-		
-		int lineSegmentLength = getWidth() - yAxisOffset - arrowHeight - spaceBetweenArrowAndLastMark;
-		int nSections = chart.getValues().size();
-		double sectionLength = (double) lineSegmentLength / nSections;
-		
-		int y1 = getHeight() - xAxisOffset;
-		int y2 = y1 + markLength;
-		
-		double currentX = yAxisOffset;
-		
-		for(int i = 0; i <= nSections; i++) {
-			g.drawLine((int)currentX, y1, (int)currentX, 0);
-			currentX += sectionLength;
-		}
-		
-		// The last mark just before the x-axis arrow.
-		g.drawLine((int)currentX, y1, (int)currentX, y2);
-	}
 
+	/**
+	 * Draws the y-axis marks.
+	 *
+	 * @param g the graphics object used for drawing
+	 * @param color the color of the marks
+	 * @param font the font of the marks
+	 */
 	private void drawYAxisMarks(Graphics g, Color color, Font font) {
 		g.setColor(color);
 		g.setFont(font);
@@ -204,6 +221,43 @@ public class BarChartComponent extends JComponent {
 		}
 	}
 	
+	//-----------------------------------------------------------
+	//							GRID
+	//-----------------------------------------------------------
+	
+	/**
+	 * Draws the x component of the grid.
+	 *
+	 * @param g the graphics object used for drawing
+	 * @param gridColor the color of the grid
+	 */
+	private void drawXGrid(Graphics g, Color gridColor) {
+		g.setColor(gridColor);
+		
+		int lineSegmentLength = getWidth() - yAxisOffset - arrowHeight - spaceBetweenArrowAndLastMark;
+		int nSections = chart.getValues().size();
+		double sectionLength = (double) lineSegmentLength / nSections;
+		
+		int y1 = getHeight() - xAxisOffset;
+		int y2 = y1 + markLength;
+		
+		double currentX = yAxisOffset;
+		
+		for(int i = 0; i <= nSections; i++) {
+			g.drawLine((int)currentX, y1, (int)currentX, 0);
+			currentX += sectionLength;
+		}
+		
+		// The last mark just before the x-axis arrow.
+		g.drawLine((int)currentX, y1, (int)currentX, y2);
+	}
+	
+	/**
+	 * Draws the y component of the grid.
+	 *
+	 * @param g the graphics object used for drawing
+	 * @param gridColor the color of the grid
+	 */
 	private void drawYGrid(Graphics g, Color gridColor) {
 		g.setColor(gridColor);
 		
@@ -221,7 +275,7 @@ public class BarChartComponent extends JComponent {
 	}
 	
 	//-----------------------------------------------------------
-	//						DRAWING AXIS
+	//							AXIS
 	//-----------------------------------------------------------
 	
 	/**
@@ -265,6 +319,14 @@ public class BarChartComponent extends JComponent {
 	//-----------------------------------------------------------
 	//						AXIS TITLES
 	//-----------------------------------------------------------
+	
+	/**
+	 * Draws the x-axis title.
+	 *
+	 * @param g the graphics object used to draw the title
+	 * @param color the color of the title
+	 * @param font the font of the title
+	 */
 	private void drawXAxisTitle(Graphics g, Color color, Font font) {
 		g.setColor(color);
 		g.setFont(font);
@@ -279,6 +341,13 @@ public class BarChartComponent extends JComponent {
 		g.drawString(title, x, y);
 	}
 	
+	/**
+	 * Draws the y-axis title.
+	 *
+	 * @param g the graphics object used to draw the title
+	 * @param color the color of the title
+	 * @param font the font of the title
+	 */
 	private void drawYAxisTitle(Graphics g, Color color, Font font) {
 		g.setColor(color);
 		g.setFont(font);
@@ -307,12 +376,32 @@ public class BarChartComponent extends JComponent {
 	//-----------------------------------------------------------
 	
 	/**
-	 * 
+	 * Calculates the {@link #xAxisOffset} value based on the font sizes
+	 * of the x-axis title and x-axis marks.
 	 *
-	 * @return
+	 * @return the calculated {@link #xAxisOffset} value
+	 */
+	private int calculateXAxisOffset() {
+		int offset = 0;
+		
+		// Height of the x-axis marks
+		setFont(AXIS_MARK_FONT);
+		offset += getFontMetrics(getFont()).getHeight();
+		
+		// Height of the x-axis title
+		setFont(AXIS_TITLE_FONT);
+		offset += getFontMetrics(getFont()).getHeight();
+		
+		return offset + 20;
+	}
+	
+	/**
+	 * Calculates the {@link #yAxisOffset} value based on the given y-axis numbers.
+	 *
+	 * @return the calculated {@link #yAxisOffset} value
 	 */
 	private int calculateYAxisOffset() {
-		setFont(AXIS_FONT_BOLD);
+		setFont(AXIS_MARK_FONT);
 		return getFontMetrics(getFont()).stringWidth(String.valueOf(chart.getMaxY())) + 50;
 	}
 }

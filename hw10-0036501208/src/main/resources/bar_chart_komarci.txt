@@ -5,4 +5,4 @@ broj komaraca
 300
 50
 
-// Ovo je broj komaraca u danu u godini
+Ovo je broj komaraca u danu u godini
