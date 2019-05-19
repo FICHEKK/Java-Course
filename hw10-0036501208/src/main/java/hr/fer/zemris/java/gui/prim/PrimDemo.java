@@ -128,9 +128,8 @@ public class PrimDemo extends JFrame {
 			int intervalEndIndex = getSize();
 			
 			// Inform all the listeners about the newly generated prime
-			for(ListDataListener listener : listeners) {
-				listener.intervalAdded(new ListDataEvent(this, ListDataEvent.INTERVAL_ADDED, intervalStartIndex, intervalEndIndex));
-			}
+			ListDataEvent event = new ListDataEvent(this, ListDataEvent.INTERVAL_ADDED, intervalStartIndex, intervalEndIndex);
+			listeners.forEach(l -> l.intervalAdded(event));
 		}
 		
 		@Override
