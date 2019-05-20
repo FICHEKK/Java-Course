@@ -27,7 +27,7 @@ public interface MultipleDocumentModel extends Iterable<SingleDocumentModel> {
 	 * Load the document from the given path and returns the
 	 * reference.
 	 *
-	 * @param path the path
+	 * @param path the path, must not be null
 	 * @return the reference to the loaded document
 	 */
 	SingleDocumentModel loadDocument(Path path);

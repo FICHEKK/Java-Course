@@ -12,6 +12,7 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -54,17 +55,8 @@ public class JNotepadPP extends JFrame {
 	/** The default application title when there are no tabs open. */
 	private static final String DEFAULT_TITLE = "JNotepad++";
 	
-	/** The icon that displays that the document is saved. */
-	private static final ImageIcon SAVED_ICON = loadIcon("icons/green_floppy_disk.png");
-	
-	/** The icon that displays that the document is not saved. */
-	private static final ImageIcon NOT_SAVED_ICON = loadIcon("icons/red_floppy_disk.png");
-	
-	/** The tabbed pane that supports multiple documents opened at the same time. */
-	private JTabbedPane tabbedPane = new JTabbedPane();
-	
-	/** List that stores all of the tab paths. */
-	private List<Path> tabPaths = new LinkedList<>();
+	/** The container that can hold multiple documents. */
+	private DefaultMultipleDocumentModel model;
 	
 	/** The reference to the last cut/copied text. */
 	private String pasteBuffer = "";
@@ -94,38 +86,57 @@ public class JNotepadPP extends JFrame {
 	 */
 	private void initGUI() {
 		Container pane = getContentPane();
+		model = new DefaultMultipleDocumentModel();
 		
 		initMenuBar();
 		pane.add(createToolBar(), BorderLayout.PAGE_START);
-		pane.add(tabbedPane, BorderLayout.CENTER);
+		pane.add(model, BorderLayout.CENTER);
 		
-		tabbedPane.addChangeListener(e -> {
-			System.out.println("Change");
-			boolean hasOpenTabs = tabbedPane.getSelectedIndex() >= 0;
+		model.addMultipleDocumentListener(new MultipleDocumentListener() {
 			
-			// Setting up buttons
-			saveDocument  .setEnabled(hasOpenTabs);
-			saveAsDocument.setEnabled(hasOpenTabs);
-			closeDocument .setEnabled(hasOpenTabs);
-			statistics    .setEnabled(hasOpenTabs);
-			pasteText     .setEnabled(hasOpenTabs);
-			
-			if(hasOpenTabs) {
-				JTextArea editor = getCurrentEditor();
-				boolean hasSelection = editor.getCaret().getDot() != editor.getCaret().getMark();
+			@Override
+			public void documentRemoved(SingleDocumentModel model) {
+				// TODO Auto-generated method stub
 				
-				cutText.setEnabled(hasSelection);
-				copyText.setEnabled(hasSelection);
 			}
+			
+			@Override
+			public void documentAdded(SingleDocumentModel model) {
+				// TODO Auto-generated method stub
+				
+			}
+			
+			@Override
+			public void currentDocumentChanged(SingleDocumentModel previousModel, SingleDocumentModel currentModel) {
+				boolean hasOpenTabs = model.getCurrentDocument() != null;
+				
+				// Setting up buttons
+				saveDocument  .setEnabled(hasOpenTabs);
+				saveAsDocument.setEnabled(hasOpenTabs);
+				closeDocument .setEnabled(hasOpenTabs);
+				statistics    .setEnabled(hasOpenTabs);
+				pasteText     .setEnabled(hasOpenTabs);
+				
+				if(hasOpenTabs) {
+					JTextArea editor = model.getCurrentDocument().getTextComponent();
+					boolean hasSelection = editor.getCaret().getDot() != editor.getCaret().getMark();
+					
+					cutText.setEnabled(hasSelection);
+					copyText.setEnabled(hasSelection);
+				}
 
-			// Setting up the proper window title
-			updateWindowTitle();
+				// Setting up the proper window title
+				updateWindowTitle();
+			}
 		});
 
 		
 		initActions();
 	}
-
+	
+	/**
+	 * Initializes all of the actions.
+	 */
 	private void initActions() {
 		// File menu
 		newDocument.putValue(Action.NAME, "New");
@@ -183,7 +194,10 @@ public class JNotepadPP extends JFrame {
 		pasteText.putValue(Action.SHORT_DESCRIPTION, "Pastes the previously copied text.");
 		pasteText.setEnabled(false);
 	}
-
+	
+	/**
+	 * Initializes the menu-bar.
+	 */
 	private void initMenuBar() {
 		JMenuBar menuBar = new JMenuBar();
 		
@@ -209,6 +223,11 @@ public class JNotepadPP extends JFrame {
 		setJMenuBar(menuBar);
 	}
 	
+	/**
+	 * Creates and returns the toolbar for this application.
+	 *
+	 * @return the initialized toolbar
+	 */
 	private JToolBar createToolBar() {
 		JToolBar tb = new JToolBar();
 		tb.setFloatable(true);
@@ -244,7 +263,7 @@ public class JNotepadPP extends JFrame {
 
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			openDocument(UNNAMED_TITLE, null, null);
+			model.createNewDocument();
 		}
 	};
 	
@@ -267,19 +286,7 @@ public class JNotepadPP extends JFrame {
 				return;
 			}
 			
-			try {
-				Path filePath = jfc.getSelectedFile().toPath();
-				String fileText = Files.readString(filePath, StandardCharsets.UTF_8);
-				
-				// If file reading passed, only then create a new document.
-				openDocument(filePath.getFileName().toString(), fileText, filePath);
-				
-			} catch (IOException ex) {
-				JOptionPane.showMessageDialog(JNotepadPP.this,
-											  "Error during the reading of the file. File was not opened.",
-											  "Error",
-											  JOptionPane.ERROR_MESSAGE);
-			}
+			model.loadDocument(jfc.getSelectedFile().toPath());
 		}
 	};
 	
@@ -301,21 +308,8 @@ public class JNotepadPP extends JFrame {
 
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			Path savePath = tabPaths.get(tabbedPane.getSelectedIndex());
-			
-			// This is a new document that has not been saved to disk yet.
-			if(savePath == null) {
-				JFileChooser jfc = new JFileChooser("C:\\Users\\FICHEKK\\Desktop");
-				jfc.setDialogTitle("Save to...");
-				
-				if(jfc.showSaveDialog(JNotepadPP.this) != JFileChooser.APPROVE_OPTION) {
-					return;
-				}
-				
-				savePath = jfc.getSelectedFile().toPath();
-			}
-			
-			performSaving(savePath, "File was saved.");
+			SingleDocumentModel doc = model.getCurrentDocument();
+			model.saveDocument(doc, doc.getFilePath());
 		}
 	};
 	
@@ -340,7 +334,6 @@ public class JNotepadPP extends JFrame {
 				
 			Path saveAsPath = jfc.getSelectedFile().toPath();
 			
-			boolean overwriting = false;
 			if(Files.exists(saveAsPath)) {
 				if(JOptionPane.showConfirmDialog(JNotepadPP.this,
 											  "File already exists. Are you sure you want to overwrite it?",
@@ -349,11 +342,9 @@ public class JNotepadPP extends JFrame {
 					JOptionPane.showMessageDialog(JNotepadPP.this, "File was not overwritten.");
 					return;
 				}
-				
-				overwriting = true;
 			}
 			
-			performSaving(saveAsPath, "File was " + (overwriting ? "overwritten" : "saved") + ".");
+			model.saveDocument(model.getCurrentDocument(), saveAsPath);
 		}
 	};
 	
@@ -372,19 +363,7 @@ public class JNotepadPP extends JFrame {
 
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			int index = tabbedPane.getSelectedIndex();
-			
-			if(tabbedPane.getIconAt(index) == NOT_SAVED_ICON) {
-				if(JOptionPane.showConfirmDialog(JNotepadPP.this,
-												 "This document was not saved. Are you sure you want to close it?",
-												 "Warning",
-												 JOptionPane.YES_NO_OPTION) == JOptionPane.NO_OPTION) {
-					return;
-				}
-			}
-			
-			tabbedPane.removeTabAt(index);
-			tabPaths.remove(index);
+			model.closeDocument(model.getCurrentDocument());
 		}
 	};
 	
@@ -403,10 +382,11 @@ public class JNotepadPP extends JFrame {
 		public void actionPerformed(ActionEvent e) {
 			boolean aborted = false;
 			
-			for(int i = tabbedPane.getTabCount() - 1; i >= 0; i--) {
-				if(tabbedPane.getIconAt(i) == NOT_SAVED_ICON) {
-					tabbedPane.setSelectedIndex(i);
-					
+			for(int i = model.getNumberOfDocuments() - 1; i >= 0; i--) {
+				SingleDocumentModel doc = model.getDocument(i);
+				
+				if(doc.isModified()) {
+					model.setSelectedIndex(i);
 					int result = JOptionPane.showOptionDialog(JNotepadPP.this,
 															  "This document was not saved. What would you like to do?", 
 															  "Select action",
@@ -417,15 +397,15 @@ public class JNotepadPP extends JFrame {
 															  options[0]);
 					// saving
 					if(result == JOptionPane.YES_OPTION) {
-						saveDocument.actionPerformed(null);
+						model.saveDocument(doc, doc.getFilePath());
 					
 					// aborting
-					} else if(result == JOptionPane.CANCEL_OPTION) { //
+					} else if(result == JOptionPane.CANCEL_OPTION) {
 						aborted = true;
 						break;
 					}
 					
-					tabbedPane.removeTabAt(i);
+					model.closeDocument(doc);
 				}
 			}
 			
@@ -439,6 +419,11 @@ public class JNotepadPP extends JFrame {
 	//						  ACTIONS - CUT, COPY, PASTE
 	//--------------------------------------------------------------------------------
 	
+	/**
+	 * Cuts the selected portion of the text. That simply means
+	 * that the selected text will be removed and stored to the
+	 * internal buffer for later pasting operation.
+	 */
 	private final Action cutText = new AbstractAction() {
 		
 		/** Used for serialization. */
@@ -446,7 +431,7 @@ public class JNotepadPP extends JFrame {
 
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			JTextArea editor = getCurrentEditor();
+			JTextArea editor = model.getCurrentDocument().getTextComponent();
 			
 			int dot  = editor.getCaret().getDot();
 			int mark = editor.getCaret().getMark();
@@ -465,6 +450,11 @@ public class JNotepadPP extends JFrame {
 		}
 	};
 	
+	/**
+	 * Copies the selected portion of the text. That simply means
+	 * that the selected text will be stored to the internal buffer
+	 * for later pasting operation.
+	 */
 	private final Action copyText = new AbstractAction() {
 		
 		/** Used for serialization. */
@@ -472,7 +462,7 @@ public class JNotepadPP extends JFrame {
 
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			JTextArea editor = getCurrentEditor();
+			JTextArea editor = model.getCurrentDocument().getTextComponent();
 			
 			int dot  = editor.getCaret().getDot();
 			int mark = editor.getCaret().getMark();
@@ -489,6 +479,11 @@ public class JNotepadPP extends JFrame {
 		}
 	};
 	
+	/**
+	 * Pastes the previously cut/copied text to the selected location.
+	 * This simply means that the stored text from previous cut/copy
+	 * operation will be inserted at the current caret position.
+	 */
 	private final Action pasteText = new AbstractAction() {
 		
 		/** Used for serialization. */
@@ -498,7 +493,7 @@ public class JNotepadPP extends JFrame {
 		public void actionPerformed(ActionEvent e) {
 			if(pasteBuffer.isEmpty()) return;
 			
-			JTextArea editor = getCurrentEditor();
+			JTextArea editor = model.getCurrentDocument().getTextComponent();
 			Document doc = editor.getDocument();
 			
 			try {
@@ -529,7 +524,7 @@ public class JNotepadPP extends JFrame {
 			int nonBlankChars = 0;
 			int lines = 0;
 
-			JTextArea editor = getCurrentEditor();
+			JTextArea editor = model.getCurrentDocument().getTextComponent();
 			String text = editor.getText();
 			
 			// number of chars
@@ -568,49 +563,49 @@ public class JNotepadPP extends JFrame {
 	 * @return the reference to the {@code JTextArea} that represents the newly created
 	 * 		   document
 	 */
-	private JTextArea openDocument(String docTitle, String docText, Path docPath) {
-		JTextArea docEditor = new JTextArea();
-		tabPaths.add(docPath);
-		tabbedPane.addTab(docTitle, SAVED_ICON, new JScrollPane(docEditor));
-		
-		int index = tabbedPane.getTabCount() - 1;
-		tabbedPane.setToolTipTextAt(index, docPath == null ? UNNAMED_TITLE : docPath.toAbsolutePath().toString());
-		tabbedPane.setSelectedIndex(index);
-		
-		docEditor.grabFocus();
-		docEditor.setText(docText);
-		
-		docEditor.getDocument().addDocumentListener(new DocumentListener() {
-			
-			@Override
-			public void removeUpdate(DocumentEvent e) {
-				tabbedPane.setIconAt(index, NOT_SAVED_ICON);
-			}
-			
-			@Override
-			public void insertUpdate(DocumentEvent e) {
-				tabbedPane.setIconAt(index, NOT_SAVED_ICON);
-			}
-			
-			@Override
-			public void changedUpdate(DocumentEvent e) {
-			}
-		});
-		
-		// Cut and copy for this newly opened document.
-		docEditor.getCaret().addChangeListener(e -> {
-			boolean hasSelection = docEditor.getCaret().getDot() != docEditor.getCaret().getMark();
-			
-			cutText.setEnabled(hasSelection);
-			copyText.setEnabled(hasSelection);
-		});
-		
-		// Nothing is selected initially, so cut and copy should be disabled.
-		cutText.setEnabled(false);
-		copyText.setEnabled(false);
-		
-		return docEditor;
-	}
+//	private JTextArea openDocument(String docTitle, String docText, Path docPath) {
+//		JTextArea docEditor = new JTextArea();
+//		tabPaths.add(docPath);
+//		tabbedPane.addTab(docTitle, SAVED_ICON, new JScrollPane(docEditor));
+//		
+//		int index = tabbedPane.getTabCount() - 1;
+//		tabbedPane.setToolTipTextAt(index, docPath == null ? UNNAMED_TITLE : docPath.toAbsolutePath().toString());
+//		tabbedPane.setSelectedIndex(index);
+//		
+//		docEditor.grabFocus();
+//		docEditor.setText(docText);
+//		
+//		docEditor.getDocument().addDocumentListener(new DocumentListener() {
+//			
+//			@Override
+//			public void removeUpdate(DocumentEvent e) {
+//				tabbedPane.setIconAt(index, NOT_SAVED_ICON);
+//			}
+//			
+//			@Override
+//			public void insertUpdate(DocumentEvent e) {
+//				tabbedPane.setIconAt(index, NOT_SAVED_ICON);
+//			}
+//			
+//			@Override
+//			public void changedUpdate(DocumentEvent e) {
+//			}
+//		});
+//		
+//		// Cut and copy for this newly opened document.
+//		docEditor.getCaret().addChangeListener(e -> {
+//			boolean hasSelection = docEditor.getCaret().getDot() != docEditor.getCaret().getMark();
+//			
+//			cutText.setEnabled(hasSelection);
+//			copyText.setEnabled(hasSelection);
+//		});
+//		
+//		// Nothing is selected initially, so cut and copy should be disabled.
+//		cutText.setEnabled(false);
+//		copyText.setEnabled(false);
+//		
+//		return docEditor;
+//	}
 	
 	/**
 	 * Performs the saving operation to the given destination.
@@ -619,40 +614,25 @@ public class JNotepadPP extends JFrame {
 	 * @param successMsg the message that will be displayed if the
 	 * 					 saving operation was successful
 	 */
-	private void performSaving(Path saveDestination, String successMsg) {
-		try {
-			Files.writeString(saveDestination, getCurrentEditor().getText());
-			
-		} catch (IOException ex) {
-			JOptionPane.showMessageDialog(JNotepadPP.this, "File saving error occured.", "Error", JOptionPane.ERROR_MESSAGE);
-			
-		}
-		
-		int index = tabbedPane.getSelectedIndex();
-		
-		// Update the path as it might have been null.
-		tabPaths.set(index, saveDestination);
-		
-		// Update the title and icon to green.
-		tabbedPane.setTitleAt(index, saveDestination.getFileName().toString());
-		tabbedPane.setIconAt(index, SAVED_ICON);
-		
-		updateWindowTitle();
-		
-		JOptionPane.showMessageDialog(JNotepadPP.this, successMsg);
-	}
-	
-	/**
-	 * A helper method that returns the reference to the currently opened
-	 * instance of {@code JTextArea} text editor.
-	 *
-	 * @return the reference to the currently opened instance of {@code JTextArea}
-	 * 		   text editor
-	 */
-	private JTextArea getCurrentEditor() {
-		JViewport viewport = ((JScrollPane) tabbedPane.getSelectedComponent()).getViewport();
-		return (JTextArea) viewport.getView();
-	}
+//	private void performSaving(Path saveDestination, String successMsg) {
+//		try {
+//			Files.writeString(saveDestination, getCurrentEditor().getText());
+//			
+//		} catch (IOException ex) {
+//			JOptionPane.showMessageDialog(JNotepadPP.this, "File saving error occured.", "Error", JOptionPane.ERROR_MESSAGE);
+//			
+//		}
+//		
+//		int index = tabbedPane.getSelectedIndex();
+//		
+//		// Update the title and icon to green.
+//		tabbedPane.setTitleAt(index, saveDestination.getFileName().toString());
+//		tabbedPane.setIconAt(index, SAVED_ICON);
+//		
+//		updateWindowTitle();
+//		
+//		JOptionPane.showMessageDialog(JNotepadPP.this, successMsg);
+//	}
 	
 	/**
 	 * Updates this {@code JFrame's} title to the proper one.
@@ -661,8 +641,8 @@ public class JNotepadPP extends JFrame {
 		String title = "";
 		
 		// If there are any tabs opened.
-		if(tabbedPane.getSelectedIndex() >= 0) {
-			Path docPath = tabPaths.get(tabbedPane.getSelectedIndex());
+		if(model.getCurrentDocument() != null) {
+			Path docPath = model.getCurrentDocument().getFilePath();
 			
 			title = (docPath != null) ? docPath.toAbsolutePath().toString() : UNNAMED_TITLE;
 			title += " - ";
@@ -671,31 +651,6 @@ public class JNotepadPP extends JFrame {
 		title += DEFAULT_TITLE;
 		
 		JNotepadPP.this.setTitle(title);
-	}
-	
-	/**
-	 * Loads the icon as a resource for the given path.
-	 *
-	 * @param path the path
-	 * @return an {@code ImageIcon} for the given path, or {@code null}
-	 * 		   if the icon was not found
-	 */
-	private static ImageIcon loadIcon(String path) {
-		InputStream is = JNotepadPP.class.getResourceAsStream(path);
-		
-		if(is == null)
-			throw new IllegalArgumentException("Resource was not found.");
-			
-		byte[] bytes = null;
-		
-		try {
-			bytes = is.readAllBytes();
-			is.close();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		
-		return new ImageIcon(bytes);
 	}
 	
 	//--------------------------------------------------------------------------------
