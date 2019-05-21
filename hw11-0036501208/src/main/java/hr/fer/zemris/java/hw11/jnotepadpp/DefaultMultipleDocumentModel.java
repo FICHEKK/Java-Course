@@ -99,6 +99,8 @@ public class DefaultMultipleDocumentModel extends JTabbedPane implements Multipl
 				notifyListenersCurrentDocumentChanged(currentDocument, currentDocument);
 			}
 		});
+		
+		notifyListenersDocumentAdded(doc);
 
 		return doc;
 	}
@@ -152,6 +154,8 @@ public class DefaultMultipleDocumentModel extends JTabbedPane implements Multipl
 						notifyListenersCurrentDocumentChanged(currentDocument, currentDocument);
 					}
 				});
+				
+				notifyListenersDocumentAdded(doc);
 				
 				return doc;	
 			}
