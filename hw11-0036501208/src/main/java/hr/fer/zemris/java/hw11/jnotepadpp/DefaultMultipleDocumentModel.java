@@ -227,8 +227,9 @@ public class DefaultMultipleDocumentModel extends JTabbedPane implements Multipl
 		
 		if(index < 0) return;
 
-		documents.remove(index);
+		SingleDocumentModel removed = documents.remove(index);
 		removeTabAt(index);
+		notifyListenersDocumentRemoved(removed);
 	}
 	
 	//---------------------------------------------------------------------
