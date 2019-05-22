@@ -67,4 +67,9 @@ public class LocalizationProvider extends AbstractLocalizationProvider {
 	public String getString(String key) {
 		return bundle.getString(key);
 	}
+
+	@Override
+	public String getCurrentLanguage() {
+		return language;
+	}
 }

@@ -13,6 +13,12 @@ public class LocalizationProviderBridge extends AbstractLocalizationProvider {
 	/** The reference to the provider. */
 	private ILocalizationProvider provider;
 	
+	/** 
+	 * The cached language. When the bridge reconnects, this might change
+	 * and listeners should be notified.
+	 * */
+	private String cachedLanguage;
+	
 	/** A simple listener that will notify all other listeners. */
 	private final ILocalizationListener notifier = () -> fire();
 	
@@ -23,6 +29,7 @@ public class LocalizationProviderBridge extends AbstractLocalizationProvider {
 	 */
 	public LocalizationProviderBridge(ILocalizationProvider provider) {
 		this.provider = provider;
+		this.cachedLanguage = provider.getCurrentLanguage();
 	}
 	
 	/**
@@ -35,6 +42,13 @@ public class LocalizationProviderBridge extends AbstractLocalizationProvider {
 		
 		provider.addLocalizationListener(notifier);
 		connected = true;
+		
+		// If the language changed while the bridge was not
+		// connected, we should notify all the listeners.
+		if(!cachedLanguage.equals(provider.getCurrentLanguage())) {
+			this.cachedLanguage = provider.getCurrentLanguage();
+			fire();
+		}
 	}
 	
 	/**
@@ -50,5 +64,10 @@ public class LocalizationProviderBridge extends AbstractLocalizationProvider {
 	@Override
 	public String getString(String key) {
 		return provider.getString(key);
+	}
+
+	@Override
+	public String getCurrentLanguage() {
+		return provider.getCurrentLanguage();
 	}
 }

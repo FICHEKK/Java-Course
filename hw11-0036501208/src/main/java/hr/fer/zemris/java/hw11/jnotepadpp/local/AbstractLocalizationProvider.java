@@ -10,6 +10,7 @@ import java.util.List;
  */
 public abstract class AbstractLocalizationProvider implements ILocalizationProvider {
 	
+	/** The listeners of this localization provider. */
 	protected List<ILocalizationListener> listeners;
 
 	@Override

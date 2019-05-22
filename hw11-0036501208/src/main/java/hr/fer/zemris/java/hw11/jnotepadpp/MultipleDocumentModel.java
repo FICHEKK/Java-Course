@@ -1,5 +1,7 @@
 package hr.fer.zemris.java.hw11.jnotepadpp;
 
+import java.io.IOException;
+import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Path;
 
 /**
@@ -29,16 +31,19 @@ public interface MultipleDocumentModel extends Iterable<SingleDocumentModel> {
 	 *
 	 * @param path the path, must not be null
 	 * @return the reference to the loaded document
+	 * @throws IOException if file loading failed
 	 */
-	SingleDocumentModel loadDocument(Path path);
+	SingleDocumentModel loadDocument(Path path) throws IOException;
 	
 	/**
 	 * Saves the document to the given path.
 	 *
 	 * @param model the document to be saved
 	 * @param newPath the save destination path
+	 * @throws IOException if file saving failed
+	 * @throws FileAlreadyExistsException if a document is already opened
 	 */
-	void saveDocument(SingleDocumentModel model, Path newPath);
+	void saveDocument(SingleDocumentModel model, Path newPath) throws IOException, FileAlreadyExistsException;
 	
 	/**
 	 * Closes the specified document.

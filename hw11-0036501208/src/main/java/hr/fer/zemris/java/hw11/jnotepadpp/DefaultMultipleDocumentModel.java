@@ -3,6 +3,7 @@ package hr.fer.zemris.java.hw11.jnotepadpp;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -12,8 +13,6 @@ import java.util.List;
 import java.util.Objects;
 
 import javax.swing.ImageIcon;
-import javax.swing.JFileChooser;
-import javax.swing.JOptionPane;
 import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
 
@@ -22,10 +21,8 @@ import javax.swing.JTabbedPane;
  *
  * @author Filip Nemec
  */
+@SuppressWarnings("serial")
 public class DefaultMultipleDocumentModel extends JTabbedPane implements MultipleDocumentModel {
-	
-	/** Used for serialization. */
-	private static final long serialVersionUID = 1L;
 
 	/** The icon that displays that the document is saved. */
 	private static final ImageIcon SAVED_ICON = loadIcon("icons/green_floppy_disk.png");
@@ -56,7 +53,6 @@ public class DefaultMultipleDocumentModel extends JTabbedPane implements Multipl
 	public DefaultMultipleDocumentModel() {
 		addChangeListener(e -> {
 			SingleDocumentModel prevCurrentDocument = currentDocument;
-			
 			currentDocument = documents.isEmpty() ? null : documents.get(getSelectedIndex());
 			
 			notifyListenersCurrentDocumentChanged(prevCurrentDocument, currentDocument);
@@ -69,28 +65,52 @@ public class DefaultMultipleDocumentModel extends JTabbedPane implements Multipl
 
 	@Override
 	public SingleDocumentModel createNewDocument() {
-		SingleDocumentModel doc = new DefaultSingleDocumentModel(null, "");
+		return openDocument(null, UNNAMED_TITLE, "");
+	}
+
+	@Override
+	public SingleDocumentModel loadDocument(Path path) throws IOException {
+		int index = documentAlreadyOpened(path);
 		
-//		currentDocument = doc;
+		if(index >= 0) {
+			setSelectedIndex(index);
+			return documents.get(index);
+			
+		} else {
+			String text = Files.readString(path, StandardCharsets.UTF_8);
+			return openDocument(path, path.getFileName().toString(), text);
+			
+		}
+	}
+	
+	/**
+	 * Helper method that opens and sets up the newly opened
+	 * document.
+	 *
+	 * @param path the path of the opened document
+	 * @param title the title of the tab that document will reside in
+	 * @param text the text of the document
+	 * @return the reference to the newly created document
+	 */
+	private SingleDocumentModel openDocument(Path path, String title, String text) {
+		SingleDocumentModel doc = new DefaultSingleDocumentModel(path, text);
 		documents.add(doc);
 		
-		addTab(UNNAMED_TITLE, SAVED_ICON, new JScrollPane(doc.getTextComponent()));
+		// Create new tab and set focus to opened document.
+		addTab(title, SAVED_ICON, new JScrollPane(doc.getTextComponent()));
 		doc.getTextComponent().grabFocus();
 		
 		// Switching to the newly opened document.
 		int index = documents.size() - 1;
-		setToolTipTextAt(index, UNNAMED_TITLE);
+		setToolTipTextAt(index, path == null ? UNNAMED_TITLE : path.toAbsolutePath().toString());
 		setSelectedIndex(index);
 		
+		// Add document listener
 		doc.addSingleDocumentListener(new SingleDocumentListener() {
 			
 			@Override
 			public void documentModifyStatusUpdated(SingleDocumentModel model) {
-				if(model.isModified()) {
-					setIconAt(index, NOT_SAVED_ICON);
-				} else {
-					setIconAt(index, SAVED_ICON);
-				}
+				setIconAt(index, model.isModified() ? NOT_SAVED_ICON : SAVED_ICON);
 			}
 			
 			@Override
@@ -100,73 +120,10 @@ public class DefaultMultipleDocumentModel extends JTabbedPane implements Multipl
 			}
 		});
 		
+		// Notify listeners that a new document was added.
 		notifyListenersDocumentAdded(doc);
-
-		return doc;
-	}
-
-	@Override
-	public SingleDocumentModel loadDocument(Path path) {
-		Objects.requireNonNull(path, "Path cannot be null");
 		
-		try {
-			String text = Files.readString(path, StandardCharsets.UTF_8);
-			SingleDocumentModel doc = new DefaultSingleDocumentModel(path, text);
-			
-			boolean alreadyOpened = false;
-			int index = 0;
-			for(SingleDocumentModel document : documents) {
-				if(Objects.equals(document.getFilePath(), path)) {
-					alreadyOpened = true;
-					break;
-				}
-				index++;
-			}
-			
-			if(alreadyOpened) {
-				setSelectedIndex(index);
-				return documents.get(index);
-				
-			} else {
-				documents.add(doc);
-				
-				addTab(path.getFileName().toString(), SAVED_ICON, new JScrollPane(doc.getTextComponent()));
-				doc.getTextComponent().grabFocus();
-				
-				int openIndex = documents.size() - 1;
-				setToolTipTextAt(openIndex, path.toAbsolutePath().toString());
-				setSelectedIndex(openIndex);
-				
-				doc.addSingleDocumentListener(new SingleDocumentListener() {
-					
-					@Override
-					public void documentModifyStatusUpdated(SingleDocumentModel model) {
-						if(model.isModified()) {
-							setIconAt(openIndex, NOT_SAVED_ICON);
-						} else {
-							setIconAt(openIndex, SAVED_ICON);
-						}
-					}
-					
-					@Override
-					public void documentFilePathUpdated(SingleDocumentModel model) {
-						setTitleAt(getSelectedIndex(), model.getFilePath().getFileName().toString());
-						notifyListenersCurrentDocumentChanged(currentDocument, currentDocument);
-					}
-				});
-				
-				notifyListenersDocumentAdded(doc);
-				
-				return doc;	
-			}
-			
-		} catch (IOException e) {
-			JOptionPane.showMessageDialog(this,
-										  "Error during the reading of the file. File was not opened.",
-										  "Error",
-										  JOptionPane.ERROR_MESSAGE);
-			return null;
-		}
+		return doc;
 	}
 	
 	//---------------------------------------------------------------------
@@ -174,51 +131,23 @@ public class DefaultMultipleDocumentModel extends JTabbedPane implements Multipl
 	//---------------------------------------------------------------------
 
 	@Override
-	public void saveDocument(SingleDocumentModel model, Path newPath) {
+	public void saveDocument(SingleDocumentModel model, Path newPath) throws IOException, FileAlreadyExistsException {
 		// If we are saving the current document, that is fine.
 		// However, if we are trying to save to a file that is already
 		// opened, we should block it.
 		if(!Objects.equals(currentDocument.getFilePath(), newPath)) {
 			
 			// Check if the save destination is already an opened file.
-			if(newPath != null) {
-				for(SingleDocumentModel doc : documents) {
-					if(Objects.equals(doc.getFilePath(), newPath)) {
-						JOptionPane.showMessageDialog(this,
-									"Cannot save as the specified file is already opened!",
-									"Error",
-									JOptionPane.ERROR_MESSAGE);
-						return;
-					}
-				}
-			}
+			if(documentAlreadyOpened(newPath) >= 0)
+				throw new FileAlreadyExistsException("Document is already opened.");
 		}
 		
 		Path dest = (newPath == null) ? model.getFilePath() : newPath;
 		
-		if(dest == null) {
-			JFileChooser jfc = new JFileChooser("C:\\Users\\FICHEKK\\Desktop");
-			jfc.setDialogTitle("Save to...");
-			
-			if(jfc.showSaveDialog(this) != JFileChooser.APPROVE_OPTION) {
-				return;
-			}
-			
-			dest = jfc.getSelectedFile().toPath();
-		}
-		
-		try {
-			Files.writeString(dest, model.getTextComponent().getText());
-			
-		} catch (IOException ex) {
-			JOptionPane.showMessageDialog(this, "File saving error occured.", "Error", JOptionPane.ERROR_MESSAGE);
-			return;
-		}
+		Files.writeString(dest, model.getTextComponent().getText());
 		
 		model.setFilePath(dest);
 		model.setModified(false);
-		
-		JOptionPane.showMessageDialog(this, "File saved successfully.");
 	}
 	
 	//---------------------------------------------------------------------
@@ -285,44 +214,27 @@ public class DefaultMultipleDocumentModel extends JTabbedPane implements Multipl
 	}
 	
 	/**
-	 * Helper method that creates a new document with the given path,
-	 * tab title and document text.
+	 * Checks if the document for the given path is already
+	 * opened. If it is, this method will return the document tab
+	 * index, otherwise will return {@code -1}.
 	 *
-	 * @param path the file path, can be null
-	 * @param title the tab title
-	 * @param text the document text
-	 * @return the reference to the newly created document model
+	 * @param path the path to be evaluated
+	 * @return if there is an opened document the given path - returns
+	 * 		   the index of the document tab, {@code -1} otherwise 
 	 */
-//	private SingleDocumentModel createNewDocument(Path path, String title, String text) {
-//		SingleDocumentModel doc = new DefaultSingleDocumentModel(path, text);
-//		
-//		setCurrentDocument(doc);
-//		addDocument(doc);
-//		
-//		addTab(title, SAVED_ICON, new JScrollPane(doc.getTextComponent()));
-//		doc.getTextComponent().grabFocus();
-//		
-//		int index = getTabCount() - 1;
-//		setToolTipTextAt(index, title);
-//		setSelectedIndex(index);
-//		
-//		doc.addSingleDocumentListener(new SingleDocumentListener() {
-//			
-//			@Override
-//			public void documentModifyStatusUpdated(SingleDocumentModel model) {
-//				if(model.isModified()) {
-//					setIconAt(index, NOT_SAVED_ICON);
-//				}
-//			}
-//			
-//			@Override
-//			public void documentFilePathUpdated(SingleDocumentModel model) {
-//				// TODO Auto-generated method stub
-//			}
-//		});
-//		
-//		return doc;
-//	}
+	private int documentAlreadyOpened(Path path) {
+		if(path == null) return -1;
+		
+		int index = 0;
+		for(SingleDocumentModel document : documents) {
+			if(Objects.equals(document.getFilePath(), path))
+				return index;
+
+			index++;
+		}
+		
+		return -1;
+	}
 	
 	//---------------------------------------------------------------------
 	//							  LISTENERS	

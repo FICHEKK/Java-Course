@@ -28,4 +28,11 @@ public interface ILocalizationProvider {
 	 * @return the value associated with the given key
 	 */
 	String getString(String key);
+	
+	/**
+	 * Returns the current language.
+	 *
+	 * @return the current language
+	 */
+	String getCurrentLanguage();
 }
