@@ -131,7 +131,7 @@ public class DefaultSingleDocumentModel implements SingleDocumentModel {
 	}
 	
 	//------------------------------------------------------------------
-	//					toString, hashCode, equals
+	//							toString
 	//------------------------------------------------------------------
 	
 	@Override

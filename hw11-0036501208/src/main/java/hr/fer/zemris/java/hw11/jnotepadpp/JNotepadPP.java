@@ -401,7 +401,7 @@ public class JNotepadPP extends JFrame {
 			
 			if(savePath == null) {
 				JFileChooser jfc = new JFileChooser();
-				jfc.setDialogTitle("Save as...");
+				jfc.setDialogTitle(translator.getString("save"));
 				
 				if(jfc.showSaveDialog(JNotepadPP.this) != JFileChooser.APPROVE_OPTION) {
 					return;
