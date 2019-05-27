@@ -63,6 +63,9 @@ public class SmartHttpServer {
 	
 	/** The thread pool used by this server. */
 	private ExecutorService threadPool;
+	
+	/** Maps the path to its {@code IWebWorker}. */
+	private Map<String,IWebWorker> workersMap = new HashMap<>();
 
 	/**
 	 * Constructs a new smart HTTP server.
@@ -81,6 +84,20 @@ public class SmartHttpServer {
 		this.workerThreads  = Integer.parseInt( server.getProperty("server.workerThreads") );
 		this.sessionTimeout = Integer.parseInt( server.getProperty("session.timeout") );
 		this.documentRoot   = Paths.get( server.getProperty("server.documentRoot") );
+		
+		// Workers properties
+		Properties workers = new Properties();
+		workers.load(Files.newInputStream(Paths.get(server.getProperty("server.workers"))));
+		workers.stringPropertyNames().forEach(path -> {
+			try {
+				String fqcn = workers.getProperty(path);
+				Class<?> referenceToClass = this.getClass().getClassLoader().loadClass(fqcn);
+				@SuppressWarnings("deprecation")
+				IWebWorker iww = (IWebWorker) referenceToClass.newInstance();
+				workersMap.put(path, iww);
+			} catch (Exception e) {
+			}
+		});
 		
 		// Mime properties
 		Properties mime = new Properties();
@@ -171,6 +188,9 @@ public class SmartHttpServer {
 		
 		/** The session ID. */
 		private String SID;
+		
+		/** This client's request. */
+		private RequestContext context = null;
 
 		/** 
 		 * Constructs a new client worker for the given socket.
@@ -226,6 +246,30 @@ public class SmartHttpServer {
 		
 		
 		public void internalDispatchRequest(String urlPath, boolean directCall) throws Exception {
+			if(workersMap.containsKey(urlPath)) {
+				IWebWorker worker = workersMap.get(urlPath);
+				
+				if(context == null) {
+					context = new RequestContext(ostream, params, permPrams, outputCookies);
+				}
+				worker.processRequest(context);
+				return;
+			}
+			
+			if(urlPath.startsWith("/ext/")) {
+				// substring(5) = skip the "/ext/" prefix
+				String fqcn = "hr.fer.zemris.java.webserver.workers." + urlPath.substring(5);
+				Class<?> referenceToClass = this.getClass().getClassLoader().loadClass(fqcn);
+				@SuppressWarnings("deprecation")
+				IWebWorker iww = (IWebWorker) referenceToClass.newInstance();
+				
+				if(context == null) {
+					context = new RequestContext(ostream, params, permPrams, outputCookies);
+				}
+				iww.processRequest(context);
+				return;
+			}
+			
 			Path resolvedPath = documentRoot.resolve(urlPath.substring(1));
 
 			if(!Files.isReadable(resolvedPath)) {
@@ -236,16 +280,13 @@ public class SmartHttpServer {
 			String extension = getExtensionFromPath(resolvedPath);
 			
 			if(extension.endsWith("smscr")) {
-				String documentBody = readFromDisk(resolvedPath);
-				
+				if(context == null) {
+					context = new RequestContext(ostream, params, permPrams, outputCookies, tempParams, this);
+				}
+
 				new SmartScriptEngine(
-						new SmartScriptParser(documentBody).getDocumentNode(),
-						new RequestContext(ostream,
-										   params,
-										   new HashMap<String, String>(),
-										   new ArrayList<RequestContext.RCCookie>(),
-										   new HashMap<String, String>(),
-										   this)
+						new SmartScriptParser(readFromDisk(resolvedPath)).getDocumentNode(),
+						context
 				).execute();
 				
 			} else {
@@ -253,16 +294,18 @@ public class SmartHttpServer {
 																	   "application/octet-stream";
 				
 				// Set-up the request context.
-				RequestContext rc = new RequestContext(ostream, params, permPrams, outputCookies);
-				rc.setMimeType(mimeType);
-				rc.setStatusCode(200);
+				if(context == null) {
+					context = new RequestContext(ostream, params, permPrams, outputCookies);
+					context.setMimeType(mimeType);
+					context.setStatusCode(200);
+				}
 				
 				// Send the requested file to the client.
 				if(mimeType.endsWith("png") || mimeType.endsWith("jpg") || mimeType.endsWith("gif")) {
-					rc.write(returnImageData(resolvedPath, mimeType.substring(mimeType.indexOf('/') + 1)));
+					context.write(returnImageData(resolvedPath, mimeType.substring(mimeType.indexOf('/') + 1)));
 					
 				} else if(mimeType.endsWith("html") || mimeType.endsWith("txt")) {
-					rc.write(Files.readAllBytes(resolvedPath));
+					context.write(Files.readAllBytes(resolvedPath));
 					
 				}
 			}
