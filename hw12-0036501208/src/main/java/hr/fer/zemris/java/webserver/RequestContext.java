@@ -180,7 +180,6 @@ public class RequestContext {
 			outputStream.write(header.getBytes(charset));
 			outputStream.flush();
 			headerGenerated = true;
-			System.out.println(header);
 			
 		} catch (IOException e) {
 			System.err.println("Error during writing of the header.");

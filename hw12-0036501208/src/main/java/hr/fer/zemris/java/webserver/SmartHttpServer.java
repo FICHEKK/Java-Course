@@ -26,6 +26,8 @@ import java.util.concurrent.Executors;
 
 import javax.imageio.ImageIO;
 
+import hr.fer.zemris.java.custom.scripting.exec.SmartScriptEngine;
+import hr.fer.zemris.java.custom.scripting.parser.SmartScriptParser;
 import hr.fer.zemris.java.webserver.RequestContext.RCCookie;
 
 /**
@@ -188,6 +190,7 @@ public class SmartHttpServer {
 			
 				List<String> headers = getHeaderLines();
 			
+				// Process the first line
 				String[] firstLine = headers.get(0).split("\\s+");
 				this.method  = firstLine[0].toUpperCase();
 				this.version = firstLine[2].toUpperCase();
@@ -230,23 +233,53 @@ public class SmartHttpServer {
 				return;
 			}
 			
-			String mimeType = getMimeTypeFromFileName(resolvedPath.getFileName().toString());
+			String extension = getExtensionFromPath(resolvedPath);
 			
-			// Set-up the request context.
-			RequestContext rc = new RequestContext(ostream, params, permPrams, outputCookies);
-			rc.setMimeType(mimeType);
-			rc.setStatusCode(200);
-			
-			// Send the requested file to the client.
-			if(mimeType.endsWith("png") || mimeType.endsWith("jpg") || mimeType.endsWith("gif")) {
-				rc.write(returnImageData(resolvedPath, mimeType.substring(mimeType.indexOf('/') + 1)));
+			if(extension.endsWith("smscr")) {
+				String documentBody = readFromDisk(resolvedPath);
 				
-			} else if(mimeType.endsWith("html") || mimeType.endsWith("txt")) {
-				rc.write(Files.readAllBytes(resolvedPath));
+				new SmartScriptEngine(
+						new SmartScriptParser(documentBody).getDocumentNode(),
+						new RequestContext(ostream,
+										   params,
+										   new HashMap<String, String>(),
+										   new ArrayList<RequestContext.RCCookie>(),
+										   new HashMap<String, String>(),
+										   this)
+				).execute();
 				
+			} else {
+				String mimeType = (mimeTypes.get(extension) != null) ? mimeTypes.get(extension) :
+																	   "application/octet-stream";
+				
+				// Set-up the request context.
+				RequestContext rc = new RequestContext(ostream, params, permPrams, outputCookies);
+				rc.setMimeType(mimeType);
+				rc.setStatusCode(200);
+				
+				// Send the requested file to the client.
+				if(mimeType.endsWith("png") || mimeType.endsWith("jpg") || mimeType.endsWith("gif")) {
+					rc.write(returnImageData(resolvedPath, mimeType.substring(mimeType.indexOf('/') + 1)));
+					
+				} else if(mimeType.endsWith("html") || mimeType.endsWith("txt")) {
+					rc.write(Files.readAllBytes(resolvedPath));
+					
+				}
 			}
 		}
 		
+		private String getExtensionFromPath(Path filePath) {
+			String extension = "";
+			String path = filePath.toString();
+					
+			int i = path.lastIndexOf('.');
+			if (i > 0) {
+			    extension = path.substring(i+1);
+			}
+			
+			return extension;
+		}
+
 		/**
 		 * A helper method that processes the header and returns
 		 * the processed header lines.
@@ -320,25 +353,6 @@ public class SmartHttpServer {
 				headers.add(currentLine);
 
 			return headers;
-		}
-
-		/**
-		 * Extracts the mime-type from the file-name.
-		 *
-		 * @param fileName the name of the file
-		 * @return the mime-type for the given file-name.
-		 */
-		private String getMimeTypeFromFileName(String fileName) {
-			String extension = "";
-					
-			int i = fileName.lastIndexOf('.');
-			if (i > 0) {
-			    extension = fileName.substring(i+1);
-			}
-			
-			String mimeType = mimeTypes.get(extension);
-			
-			return mimeType != null ? mimeType : "application/octet-stream";
 		}
 		
 		/**
@@ -477,5 +491,31 @@ public class SmartHttpServer {
 			}
 		}
 		return bos.toByteArray();
+	}
+
+	/**
+	 * Returns the text stored in the given file as a single
+	 * {@code String}.
+	 * 
+	 * @param filePath the file path
+	 * @return {@code String} of the file contents, or {@code null}
+	 * 		   if exception occurred
+	 */
+	private static String readFromDisk(Path filePath) {
+		ByteArrayOutputStream bos = new ByteArrayOutputStream();
+		
+		try (InputStream is = Files.newInputStream(filePath)) {
+			byte[] buffer = new byte[1024];
+			while (true) {
+				int r = is.read(buffer);
+				if (r < 1) break;
+				bos.write(buffer, 0, r);
+			}
+			return new String(bos.toByteArray(), StandardCharsets.UTF_8);
+			
+		} catch (IOException ex) {
+			return null;
+			
+		}
 	}
 }
