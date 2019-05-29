@@ -17,7 +17,7 @@ public class EchoParams implements IWebWorker {
 	public void processRequest(RequestContext context) {
 		try {
 			var sb = new StringBuilder();
-			sb.append("<table style=\"width:50%\">\r\n");
+			sb.append("<table border=\"1\">\r\n");
 			sb.append("<tr>\r\n");
 			sb.append("<th>Parameter name</th>\r\n");
 			sb.append("<th>Parameter value</th>\r\n");

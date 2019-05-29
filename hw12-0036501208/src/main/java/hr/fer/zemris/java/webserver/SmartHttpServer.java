@@ -244,13 +244,17 @@ public class SmartHttpServer {
 			}
 		}
 		
-		
 		public void internalDispatchRequest(String urlPath, boolean directCall) throws Exception {
+			if(directCall && urlPath.startsWith("/private/")) {
+				sendError(ostream, 404, "File not found");
+				return;
+			}
+			
 			if(workersMap.containsKey(urlPath)) {
 				IWebWorker worker = workersMap.get(urlPath);
 				
 				if(context == null) {
-					context = new RequestContext(ostream, params, permPrams, outputCookies);
+					context = new RequestContext(ostream, params, permPrams, outputCookies, tempParams, this);
 				}
 				worker.processRequest(context);
 				return;
