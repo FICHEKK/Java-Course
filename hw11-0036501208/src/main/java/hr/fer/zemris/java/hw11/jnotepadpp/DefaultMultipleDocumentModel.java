@@ -110,7 +110,7 @@ public class DefaultMultipleDocumentModel extends JTabbedPane implements Multipl
 			
 			@Override
 			public void documentModifyStatusUpdated(SingleDocumentModel model) {
-				setIconAt(index, model.isModified() ? NOT_SAVED_ICON : SAVED_ICON);
+				setIconAt(documents.indexOf(doc), model.isModified() ? NOT_SAVED_ICON : SAVED_ICON);
 			}
 			
 			@Override

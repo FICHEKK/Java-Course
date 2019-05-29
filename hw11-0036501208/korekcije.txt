@@ -1,0 +1,66 @@
+-----------------------------------------------------
+					RECENZIJA 1
+-----------------------------------------------------
+
+Ova zadaća ocijenjena je ocjenom 1 zbog toga što kad korsinik zatvara modificirani tab sa close,
+ne pita ga se želi li spremiti modificirani file.
+
+pokretanjem se otvara prozor koji omogućava da korisnik otvori tri različita dokumenta i stvori dva nova. ----- PROLAZI
+
+Pokušaj otvaranja File->Open dokumenta koji je već otvoren NE smije dodati novi tab; ili treba korisniku reći da ne može, ili treba samo u prvi plan "aktivirati" tab u kojem je taj dokument već otvoren.-----PROLAZI
+
+Pokušaj snimanja dokumenta pod imenom/stazom dokumenta koji je već otvoren u nekom tabu ne smije uspjeti.------PROLAZI
+
+Zatvaranjem aplikacije na bilo koji način kao i pokušajem zatvaranja direktno nekog taba korisnik mora biti pitan želi li ga snimiti ako je isti bio modificiran.-----NE PROLAZI,ako je modificiran i zatvaramo ga sa close ne pita
+se korisnika da ga zatvori
+
+Klikanjem po tabovima titlebar prozora treba ažurirati ime dokumenta koji je u aktivnom tabu.-----PROLAZI
+
+Sve akcije s popisa na prvoj stranici moraju biti dostupne u izbornicima kao i kroz toolbar (one navedene s tog popisa - ako ih ima još, nije problem).-----PROLAZI
+
+Stavki tab mora imati ikonicu koja vizualno prikazuje je li dokument modificiran ili nije.---PROLAZI
+
+Kod zatvaranja tabova, ako korisnik zatvori zadnji tab, sasvim je OK da prozor ostane bez ijednog dokumenta, ili pak (kao što radi Notepad++) da se automatski stvori jedan novi prazan dokument. Oba ponašanja su OK.----PROLAZI
+
+Lokalizacija i sve ostalo radi kako treba, lokaliziran su i JOptionPaneovi što je za svaku pohvalu.
+Javadoc je uredno napisan.
+Mislim da prijevodi se također trebaju nalaziti u resources.
+Da nije narušen minimalni uvjet kod closeanja taba ocjena bi bila 5.
+
+-----------------------------------------------------
+					RECENZIJA 2
+-----------------------------------------------------
+
+1. zadatak:
+ - otvaranje 3 postojeća i 2 nova dokumenta - OK
+ - otvaranje već otvorenog nije dopušteno - OK
+ - spremanje preko već otvorenog - OK
+ - zatvaranje taba - neispravno (ne daje upozorenje ako se klikne Close u toolbaru)
+ - zatvaranje aplikacije - OK
+ - klikanje po tabovima mijenja naslov - OK
+ - ikonice - OK
+ - zatvaranja tabova - OK
+
+2. zadatak - ispunjen
+
+Dobro riješena zadaća, jedino je Close tipka sprječava u prolazu. Šteta, jer je sve drugo dobro. Inače bih dao 5.
+
+-----------------------------------------------------
+					RECENZIJA 3
+-----------------------------------------------------
+
+Nemec, Filip (0036501208)
+
+Pozdrav.
+
+Minimalna implementacija nije ostvarena. Kada modificiram neku datoteku i pokušam ju zatvoriti, ne dobivam nikakvu poruku već se samo zatvori, dok isto funkcionira prilikom zatvaranja cijelog prozora.
+
+Lokalizacija radi. Sat nije poravnat u desni kut kao što piše u uputi. U notepadu nisi trebao sam implementirati naredbe koje se bave kopiranjem i sl. pošto je to već sve implementirano u TextArea (što radi s clipboardom operacijskog sustava). Pohvala za uklanjanje listenera nakon što se promjeni dokument. Prilikom akcije za gašenje prozora ti nije potrebna ova zastavica, možeš u trenutku kad korisnik otkaže se samo vratiti van iz metode (return). Također prilikom gašenja nema smisla da se tabovi gase kako prolaziš po njima. Više smisla ima da se na kraju sve skupa zatvori, tako da ako korisnik otkaže zatvaranje prozora svi tabovi ostanu otvoreni.
+Kod je dobro napisan i nemam nekakvih prevelikih zamjerki.
+
+-----------------------------------------------------
+				  ISPRAVAK ZADAĆE
+-----------------------------------------------------
+
+- Popravljeno zatvaranje taba - sada se korisnika pita za potvrdu.
+- Prijevodi su prebačeni u "src/main/resources".

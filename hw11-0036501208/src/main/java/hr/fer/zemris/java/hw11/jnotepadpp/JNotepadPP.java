@@ -493,6 +493,18 @@ public class JNotepadPP extends JFrame {
 
 		@Override
 		public void actionPerformed(ActionEvent e) {
+			if(model.getCurrentDocument().isModified()) {
+				int result = getUserDecisionForUnsavedFile();
+				
+				if(result == JOptionPane.YES_OPTION) {
+					saveDocument.actionPerformed(null);
+					
+				} else if(result == JOptionPane.CANCEL_OPTION) {
+					return;
+					
+				}
+			}
+			
 			model.closeDocument(model.getCurrentDocument());
 		}
 	};
@@ -504,45 +516,51 @@ public class JNotepadPP extends JFrame {
 
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			boolean aborted = false;
-			
-			String[] options = {translator.getString("save"),
-								translator.getString("discard"),
-								translator.getString("abort")};
-			
 			for(int i = model.getNumberOfDocuments() - 1; i >= 0; i--) {
 				SingleDocumentModel doc = model.getDocument(i);
 				
 				if(doc.isModified()) {
 					model.setSelectedIndex(i);
-					int result = JOptionPane.showOptionDialog(JNotepadPP.this,
-															  translator.getString("document_not_saved_msg"), 
-															  translator.getString("select_action_title"),
-															  JOptionPane.YES_NO_CANCEL_OPTION,
-															  JOptionPane.QUESTION_MESSAGE,
-															  null,
-															  options,
-															  options[0]);
-					// saving
+					int result = getUserDecisionForUnsavedFile();
+					
 					if(result == JOptionPane.YES_OPTION) {
 						saveDocument.actionPerformed(null);
+						
+					} else if(result == JOptionPane.NO_OPTION) {
+						model.closeDocument(doc);
 					
-					// aborting
 					} else if(result == JOptionPane.CANCEL_OPTION) {
-						aborted = true;
-						break;
+						return;
+						
 					}
-					
-					model.closeDocument(doc);
 				}
 			}
-			
-			if(!aborted) {
-				dispose();
-				clock.stop();
-			}
+
+			dispose();
+			clock.stop();
 		}
 	};
+	
+	/**
+	 * Prompts the user to decide what should happen with the
+	 * unsaved file.
+	 *
+	 * @return the result of the decision
+	 */
+	private int getUserDecisionForUnsavedFile() {
+		String[] options = {translator.getString("save"),
+							translator.getString("discard"),
+							translator.getString("abort")};
+		
+		return JOptionPane.showOptionDialog(JNotepadPP.this,
+											translator.getString("document_not_saved_msg"), 
+											translator.getString("select_action_title"),
+											JOptionPane.YES_NO_CANCEL_OPTION,
+											JOptionPane.QUESTION_MESSAGE,
+											null,
+											options,
+										    options[0]);
+	}
 	
 	//--------------------------------------------------------------------------------
 	//						  ACTIONS - CUT, COPY, PASTE

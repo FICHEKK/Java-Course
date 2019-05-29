@@ -16,7 +16,7 @@ public class LocalizationProvider extends AbstractLocalizationProvider {
 	private static final LocalizationProvider INSTANCE = new LocalizationProvider();
 	
 	/** The location of language translation files. */
-	private static final String TRANSLATION_PACKAGE = "hr.fer.zemris.java.hw11.jnotepadpp.local.prijevodi";
+	private static final String TRANSLATION_PACKAGE = "hr.fer.zemris.java.hw11.jnotepadpp.locale.prijevodi";
 	
 	/** The default localization settings language. */
 	private static final String DEFAULT_LANGUAGE = "en";
