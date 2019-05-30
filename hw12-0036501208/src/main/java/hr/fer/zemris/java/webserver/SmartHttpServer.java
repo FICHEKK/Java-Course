@@ -1,6 +1,5 @@
 package hr.fer.zemris.java.webserver;
 
-import java.awt.image.BufferedImage;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.ByteArrayOutputStream;
@@ -21,10 +20,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Random;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-
-import javax.imageio.ImageIO;
 
 import hr.fer.zemris.java.custom.scripting.exec.SmartScriptEngine;
 import hr.fer.zemris.java.custom.scripting.parser.SmartScriptParser;
@@ -49,9 +48,6 @@ public class SmartHttpServer {
 	/** The number of threads used in the thread pool. */
 	private int workerThreads;
 	
-	/** The duration of user sessions in seconds. */
-	private int sessionTimeout;
-	
 	/** The root directory for serving files. */
 	private Path documentRoot;
 	
@@ -66,6 +62,15 @@ public class SmartHttpServer {
 	
 	/** Maps the path to its {@code IWebWorker}. */
 	private Map<String,IWebWorker> workersMap = new HashMap<>();
+	
+	/** The duration of user sessions in seconds. */
+	private int sessionTimeout;
+	
+	/** A map of sessions. */
+	private Map<String, SessionMapEntry> sessions = new HashMap<String, SmartHttpServer.SessionMapEntry>();
+	
+	/** Randomization object used by the session. */
+	private Random sessionRandom = new Random();
 
 	/**
 	 * Constructs a new smart HTTP server.
@@ -96,6 +101,7 @@ public class SmartHttpServer {
 				IWebWorker iww = (IWebWorker) referenceToClass.newInstance();
 				workersMap.put(path, iww);
 			} catch (Exception e) {
+				e.printStackTrace();
 			}
 		});
 		
@@ -105,6 +111,9 @@ public class SmartHttpServer {
 		mime.stringPropertyNames().forEach(key -> this.mimeTypes.put(key, mime.getProperty(key)));
 	}
 
+	/**
+	 * Starts this HTTP server.
+	 */
 	protected synchronized void start() {
 		if(serverThread == null) {
 			System.out.println("Starting the server for adress " + address + " and port " + port +"...");
@@ -115,6 +124,9 @@ public class SmartHttpServer {
 		}
 	}
 
+	/**
+	 * Stops this HTTP server.
+	 */
 	protected synchronized void stop() {
 		serverThread.interrupt();
 		threadPool.shutdown();
@@ -132,16 +144,32 @@ public class SmartHttpServer {
 			try(ServerSocket serverSocket = new ServerSocket()) {
 				serverSocket.bind(new InetSocketAddress(InetAddress.getByName(address), port));
 				
+				SessionCleaner sessionCleaner = new SessionCleaner();
+				sessionCleaner.setDaemon(true);
+				sessionCleaner.start();
+				
 				while(true) {
 					Socket client = serverSocket.accept();
 					ClientWorker cw = new ClientWorker(client);
 					threadPool.submit(cw);
 				}
+				
 			} catch (IOException e) {
+				e.printStackTrace();
 			}
 		}
 	}
 	
+	//----------------------------------------------------------
+	//						  main
+	//----------------------------------------------------------
+	
+	/**
+	 * Starts the server with the provided properties.
+	 *
+	 * @param args none are used
+	 * @throws IOException if an IO error occurs
+	 */
 	public static void main(String[] args) throws IOException {
 		SmartHttpServer server = new SmartHttpServer("server.properties");
 		server.start();
@@ -219,9 +247,9 @@ public class SmartHttpServer {
 					sendError(ostream, 400, "Bad request");
 					return;
 				}
-			
-				// Initialize the host property.
+
 				initHost(headers);
+				checkSession(headers);
 				
 				// Resolving the request path.
 				String requestedPath = firstLine[1];
@@ -244,6 +272,67 @@ public class SmartHttpServer {
 			}
 		}
 		
+		private void checkSession(List<String> headers) {
+			String sidCandidate = null;
+			
+			for(String line : headers) {
+				if(!line.startsWith("Cookie:")) continue;
+					
+				String cookies = line.trim().split("\\s+")[1];
+				
+				for(String cookie : cookies.split(";")) {
+					String[] parts = cookie.split("=");
+					String name  = parts[0];
+					String value = parts[1].substring(1, parts[1].length() - 1);
+					
+					if(name.toLowerCase().equals("sid")) {
+						sidCandidate = value;
+						break;
+					}
+				}
+				
+				break;
+			}
+			
+			if(sidCandidate == null) {
+				generateNewSession();
+				
+			} else {
+				SessionMapEntry session = sessions.get(sidCandidate);
+				
+				if(session == null) {
+					session = generateNewSession();
+					
+				} else if(!session.host.equals(this.host)) {
+					session = generateNewSession();
+
+				} else if(session.validUntil < System.currentTimeMillis()) {
+					sessions.remove(sidCandidate);
+					session = generateNewSession();
+
+				} else {
+					session.validUntil = System.currentTimeMillis() + sessionTimeout * 1000;
+					
+				}
+				
+				permPrams = session.map;
+			}
+		}
+		
+		private SessionMapEntry generateNewSession() {
+			SID = generateSessionID();
+			
+			SessionMapEntry session = new SessionMapEntry(SID,
+													  	  host,
+													  	  System.currentTimeMillis() + sessionTimeout * 1000,
+													  	  new ConcurrentHashMap<String, String>());
+			
+			sessions.put(SID, session);
+			outputCookies.add(new RCCookie("sid", SID, null, host, "/"));
+			
+			return session;
+		}
+
 		public void internalDispatchRequest(String urlPath, boolean directCall) throws Exception {
 			if(directCall && urlPath.startsWith("/private/")) {
 				sendError(ostream, 404, "File not found");
@@ -254,7 +343,7 @@ public class SmartHttpServer {
 				IWebWorker worker = workersMap.get(urlPath);
 				
 				if(context == null) {
-					context = new RequestContext(ostream, params, permPrams, outputCookies, tempParams, this);
+					context = new RequestContext(ostream, params, permPrams, outputCookies, tempParams, this, SID);
 				}
 				worker.processRequest(context);
 				return;
@@ -268,7 +357,7 @@ public class SmartHttpServer {
 				IWebWorker iww = (IWebWorker) referenceToClass.newInstance();
 				
 				if(context == null) {
-					context = new RequestContext(ostream, params, permPrams, outputCookies);
+					context = new RequestContext(ostream, params, permPrams, outputCookies, SID);
 				}
 				iww.processRequest(context);
 				return;
@@ -285,7 +374,7 @@ public class SmartHttpServer {
 			
 			if(extension.endsWith("smscr")) {
 				if(context == null) {
-					context = new RequestContext(ostream, params, permPrams, outputCookies, tempParams, this);
+					context = new RequestContext(ostream, params, permPrams, outputCookies, tempParams, this, SID);
 				}
 
 				new SmartScriptEngine(
@@ -299,19 +388,12 @@ public class SmartHttpServer {
 				
 				// Set-up the request context.
 				if(context == null) {
-					context = new RequestContext(ostream, params, permPrams, outputCookies);
+					context = new RequestContext(ostream, params, permPrams, outputCookies, SID);
 					context.setMimeType(mimeType);
 					context.setStatusCode(200);
 				}
 				
-				// Send the requested file to the client.
-				if(mimeType.endsWith("png") || mimeType.endsWith("jpg") || mimeType.endsWith("gif")) {
-					context.write(returnImageData(resolvedPath, mimeType.substring(mimeType.indexOf('/') + 1)));
-					
-				} else if(mimeType.endsWith("html") || mimeType.endsWith("txt")) {
-					context.write(Files.readAllBytes(resolvedPath));
-					
-				}
+				context.write(Files.readAllBytes(resolvedPath));
 			}
 		}
 		
@@ -350,23 +432,6 @@ public class SmartHttpServer {
 			}
 			
 			return headerLines;
-		}
-		
-		/**
-		 * Returns the {@code byte[]} of the image at the given {@code Path}.
-		 *
-		 * @param imagePath the image path
-		 * @param imageType the image type; for example "png" or "jpg"
-		 * @return the image data
-		 * @throws IOException if IO error occurs
-		 */
-		private byte[] returnImageData(Path imagePath, String imageType) throws IOException {
-			BufferedImage image = ImageIO.read(imagePath.toFile());
-			
-			ByteArrayOutputStream bos = new ByteArrayOutputStream();
-			ImageIO.write(image, imageType, bos);
-
-			return bos.toByteArray();
 		}
 
 		/**
@@ -458,6 +523,71 @@ public class SmartHttpServer {
 	}
 	
 	//----------------------------------------------------------
+	//					  SESSION MAP ENTRY	
+	//----------------------------------------------------------
+	
+	/**
+	 * Models a session entry.
+	 *
+	 * @author Filip Nemec
+	 */
+	private static class SessionMapEntry {
+		
+		/** The session id. */
+		String sid;
+		
+		/** The session host. */
+		String host;
+		
+		/** The session timeout time. */
+		long validUntil;
+		
+		/** The session data storage. */
+		Map<String, String> map;
+
+		/**
+		 * Constructs a new session entry.
+		 *
+		 * @param sid the session id
+		 * @param host the host
+		 * @param validUntil the timeout time
+		 * @param map the client's data map
+		 */
+		public SessionMapEntry(String sid, String host, long validUntil, Map<String, String> map) {
+			this.sid = sid;
+			this.host = host;
+			this.validUntil = validUntil;
+			this.map = map;
+		}
+	}
+	
+	//----------------------------------------------------------
+	//					  SESSION CLEANER
+	//----------------------------------------------------------
+	
+	private class SessionCleaner extends Thread {
+		
+		@Override
+		public void run() {
+			while(true) {
+				var iter = sessions.entrySet().iterator();
+				for(; iter.hasNext(); ) {
+					SessionMapEntry session = iter.next().getValue();
+					
+					if(session.validUntil < System.currentTimeMillis()) {
+						iter.remove();
+					}
+				}
+
+				try {
+					Thread.sleep(300_000);
+				} catch (InterruptedException e) {
+				}
+			}
+		}
+	}
+	
+	//----------------------------------------------------------
 	//					   HELPER METHODS
 	//----------------------------------------------------------
 	
@@ -481,6 +611,7 @@ public class SmartHttpServer {
 			
 		} catch (IOException e) {
 			System.err.println("Error during the output stream writing.");
+			e.printStackTrace();
 		}
 	}
 	
@@ -561,8 +692,19 @@ public class SmartHttpServer {
 			return new String(bos.toByteArray(), StandardCharsets.UTF_8);
 			
 		} catch (IOException ex) {
+			ex.printStackTrace();
 			return null;
 			
 		}
+	}
+	
+	private String generateSessionID() {
+		var sb = new StringBuilder();
+		
+		for(int i = 0; i < 20; i++) {
+			sb.append((char)('A' + sessionRandom.nextInt(26)));
+		}
+		
+		return sb.toString();
 	}
 }

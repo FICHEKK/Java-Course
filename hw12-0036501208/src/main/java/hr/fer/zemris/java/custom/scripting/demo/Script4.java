@@ -30,7 +30,7 @@ public class Script4 {
 	 * @param args none are used
 	 */
 	public static void main(String[] args) {
-		String documentBody = readFromDisk("fibonacci.smscr");
+		String documentBody = readFromDisk("webroot/scripts/fibonacci.smscr");
 
 		Map<String, String> parameters = new HashMap<String, String>();
 		Map<String, String> persistentParameters = new HashMap<String, String>();
@@ -39,7 +39,7 @@ public class Script4 {
 		// create engine and execute it
 		new SmartScriptEngine(
 				new SmartScriptParser(documentBody).getDocumentNode(),
-				new RequestContext(System.out, parameters, persistentParameters, cookies)
+				new RequestContext(System.out, parameters, persistentParameters, cookies, null)
 		).execute();
 	}
 	

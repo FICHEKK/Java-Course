@@ -57,6 +57,9 @@ public class RequestContext {
 	/** This request's dispatcher. */
 	private IDispatcher dispatcher;
 	
+	/** The session ID. */
+	private String sid;
+	
 	//=====================================================================================
 	//									CONSTRUCTORS
 	//=====================================================================================
@@ -68,13 +71,15 @@ public class RequestContext {
 	 * @param parameters the parameters
 	 * @param persistentParameters the persistent parameters
 	 * @param outputCookies the output cookies
+	 * @param sid the session id
 	 */
 	public RequestContext(OutputStream outputStream, Map<String,String> parameters,
-						  Map<String,String> persistentParameters, List<RCCookie> outputCookies) {
+						  Map<String,String> persistentParameters, List<RCCookie> outputCookies, String sid) {
 		this.outputStream 		  = Objects.requireNonNull(outputStream);
 		this.parameters 		  = (parameters != null)           ? parameters           : new HashMap<>();
 		this.persistentParameters = (persistentParameters != null) ? persistentParameters : new HashMap<>();
 		this.outputCookies 		  = (outputCookies != null)        ? outputCookies        : new LinkedList<>();
+		this.sid = sid;
 	}
 	
 	/**
@@ -86,11 +91,12 @@ public class RequestContext {
 	 * @param outputCookies the output cookies
 	 * @param temporaryParameters the temporary parameters
 	 * @param dispatcher the dispatcher
+	 * @param sid the session id
 	 */
 	public RequestContext(OutputStream outputStream, Map<String,String> parameters,
 			  			  Map<String,String> persistentParameters, List<RCCookie> outputCookies,
-			  			  Map<String, String> temporaryParameters, IDispatcher dispatcher) {
-		this(outputStream, parameters, persistentParameters, outputCookies);
+			  			  Map<String, String> temporaryParameters, IDispatcher dispatcher, String sid) {
+		this(outputStream, parameters, persistentParameters, outputCookies, sid);
 		this.dispatcher 		  = Objects.requireNonNull(dispatcher);
 		this.temporaryParameters  = (temporaryParameters != null)  ? temporaryParameters  : new HashMap<>();
 	}
@@ -202,6 +208,8 @@ public class RequestContext {
 		if(cookie.path != null)   line += "; Path=" + cookie.path;
 		if(cookie.maxAge != null) line += "; Max-Age=" + cookie.maxAge;
 		
+		if(cookie.name.equals("sid")) line += "; HttpOnly";
+		
 		return line + "\r\n";
 	}
 	
@@ -275,7 +283,7 @@ public class RequestContext {
 	 * @return the session ID
 	 */
 	public String getSessionID() {
-		return "";
+		return sid;
 	}
 	
 	/**

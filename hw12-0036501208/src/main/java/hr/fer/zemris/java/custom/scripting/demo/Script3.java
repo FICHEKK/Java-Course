@@ -30,14 +30,14 @@ public class Script3 {
 	 * @param args none are used
 	 */
 	public static void main(String[] args) {
-		String documentBody = readFromDisk("brojPoziva.smscr");
+		String documentBody = readFromDisk("webroot/scripts/brojPoziva.smscr");
 		
 		Map<String, String> parameters = new HashMap<String, String>();
 		Map<String, String> persistentParameters = new HashMap<String, String>();
 		List<RCCookie> cookies = new ArrayList<RequestContext.RCCookie>();
 		
 		persistentParameters.put("brojPoziva", "3");
-		RequestContext rc = new RequestContext(System.out, parameters, persistentParameters, cookies);
+		RequestContext rc = new RequestContext(System.out, parameters, persistentParameters, cookies, null);
 		
 		new SmartScriptEngine(new SmartScriptParser(documentBody).getDocumentNode(), rc).execute();
 		

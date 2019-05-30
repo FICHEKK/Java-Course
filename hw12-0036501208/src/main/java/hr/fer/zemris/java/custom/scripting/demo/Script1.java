@@ -29,7 +29,7 @@ public class Script1 {
 	 * @param args none are used.
 	 */
 	public static void main(String[] args) {
-		String documentBody = readFromDisk("osnovni.smscr");
+		String documentBody = readFromDisk("webroot/scripts/osnovni.smscr");
 		Map<String, String> parameters = new HashMap<String, String>();
 		Map<String, String> persistentParameters = new HashMap<String, String>();
 		List<RCCookie> cookies = new ArrayList<RequestContext.RCCookie>();
@@ -37,7 +37,7 @@ public class Script1 {
 		// create engine and execute it
 		new SmartScriptEngine(
 				new SmartScriptParser(documentBody).getDocumentNode(),
-				new RequestContext(System.out, parameters, persistentParameters, cookies)
+				new RequestContext(System.out, parameters, persistentParameters, cookies, null)
 		).execute();
 	}
 
