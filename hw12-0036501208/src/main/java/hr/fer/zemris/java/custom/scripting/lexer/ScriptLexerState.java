@@ -6,6 +6,7 @@ package hr.fer.zemris.java.custom.scripting.lexer;
  * TAG = processing tag
  */
 public enum ScriptLexerState {
+	
 	/** This lexer is currently processing text. */
 	PROCESSING_TEXT,
 	

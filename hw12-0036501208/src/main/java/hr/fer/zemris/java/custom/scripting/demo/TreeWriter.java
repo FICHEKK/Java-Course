@@ -28,6 +28,8 @@ public class TreeWriter {
 	/**
 	 * Program starts from here. It expects a single argument: the
 	 * path of the file.
+	 * <br>
+	 * For example, use: src/main/resources/parsable_documents/sample_text.txt
 	 *
 	 * @param args the path of the file to be parsed
 	 */

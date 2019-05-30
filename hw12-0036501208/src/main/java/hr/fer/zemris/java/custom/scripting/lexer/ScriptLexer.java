@@ -8,6 +8,7 @@ import java.util.Objects;
  * token until it is being asked.
  */
 public class ScriptLexer {
+	
 	/** Char array representation of the text this lexer is currently processing. */
 	private char[] data;
 	

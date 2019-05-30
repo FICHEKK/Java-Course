@@ -4,6 +4,7 @@ package hr.fer.zemris.java.custom.scripting.lexer;
  * Types that the script token can be.
  */
 public enum ScriptTokenType {
+	
 	/** Text token represented by a {@code String}. */
 	TEXT,
 	

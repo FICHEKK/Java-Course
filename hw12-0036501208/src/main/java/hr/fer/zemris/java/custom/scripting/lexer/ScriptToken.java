@@ -5,6 +5,7 @@ package hr.fer.zemris.java.custom.scripting.lexer;
  * processing the given input.
  */
 public class ScriptToken {
+	
 	/** Type of this token. */
 	private ScriptTokenType type;
 	

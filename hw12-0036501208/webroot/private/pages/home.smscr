@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+
+ <head>
+	 <style>
+	 	body {background-color: #{$= "background" 0 @tparamGet $};}
+	 </style>
+ </head>
+ 
+ <body>
+ 	<a href=/scripts/osnovni.smscr> osnovni.smscr </a> <br>
+	<a href=/scripts/brojPoziva.smscr> brojPoziva.smscr </a> <br>
+	<a href=/scripts/fibonaccih.smscr> fibonaccih.smscr </a> <br>
+	<br>
+	<a href=/hello> HelloWorker </a> <br>
+	<a href=/cw> CircleWorker </a>
+	
+	<form action="/calc" method="get">
+	  <br>
+	  a: <input type="text" name="a"> <br>
+	  b: <input type="text" name="b"> <br>
+	  
+	  <input type="submit" value="Submit">
+	</form> 
+	
+	<br>
+	<br>
+	
+	<form action="/setbgcolor" method="get">
+		<select name="bgcolor">
+			<option value="FF0000"> Red </option>
+			<option value="00FF00"> Green </option>
+			<option value="0000FF"> Blue </option>
+			<option value="FFA500"> Orange </option>
+			<option value="FFD700"> Yellow </option>
+			<option value="FF00FF"> Purple </option>
+			<option value="FFFFFF"> White </option>
+			<option value="D3D3D3"> Light-Grey </option>
+			<option value="909090"> Silver </option>
+			<option value="595959"> Dark-Grey </option>
+			<option value="000000"> Black </option>
+		</select>
+		
+		<br>
+		
+		<input type="submit" value="Submit">
+	</form>
+ </body>
+ 
+</html>

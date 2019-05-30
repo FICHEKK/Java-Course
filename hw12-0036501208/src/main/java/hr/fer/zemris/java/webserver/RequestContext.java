@@ -253,7 +253,6 @@ public class RequestContext {
 	 * @return the unmodifiable set of parameter names
 	 */
 	public Set<String> getParameterNames() {
-		// TODO this should maybe be cached?
 		return Collections.unmodifiableSet(parameters.keySet());
 	}
 	
@@ -263,7 +262,6 @@ public class RequestContext {
 	 * @return the unmodifiable set of persistent parameter names
 	 */
 	public Set<String> getPersistentParameterNames() {
-		// TODO this should maybe be cached?
 		return Collections.unmodifiableSet(persistentParameters.keySet());
 	}
 	
@@ -273,7 +271,6 @@ public class RequestContext {
 	 * @return the unmodifiable set of temporary parameter names
 	 */
 	public Set<String> getTemporaryParameterNames() {
-		// TODO this should maybe be cached?
 		return Collections.unmodifiableSet(temporaryParameters.keySet());
 	}
 	

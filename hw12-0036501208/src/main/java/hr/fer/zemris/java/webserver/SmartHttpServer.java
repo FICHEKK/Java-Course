@@ -96,10 +96,7 @@ public class SmartHttpServer {
 		workers.stringPropertyNames().forEach(path -> {
 			try {
 				String fqcn = workers.getProperty(path);
-				Class<?> referenceToClass = this.getClass().getClassLoader().loadClass(fqcn);
-				@SuppressWarnings("deprecation")
-				IWebWorker iww = (IWebWorker) referenceToClass.newInstance();
-				workersMap.put(path, iww);
+				workersMap.put(path, getWebWorkerFromFQCN(fqcn));
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
@@ -116,7 +113,7 @@ public class SmartHttpServer {
 	 */
 	protected synchronized void start() {
 		if(serverThread == null) {
-			System.out.println("Starting the server for adress " + address + " and port " + port +"...");
+			System.out.println("Starting the server with address " + address + " and port " + port +"...");
 			
 			serverThread = new ServerThread();
 			serverThread.start();
@@ -264,6 +261,7 @@ public class SmartHttpServer {
 				
 				internalDispatchRequest(path, true);
 
+				ostream.flush();
 				csocket.close();
 				
 			} catch (Exception e) {
@@ -272,6 +270,11 @@ public class SmartHttpServer {
 			}
 		}
 		
+		/**
+		 * Processes this client's session.
+		 *
+		 * @param headers the headers sent by the client
+		 */
 		private void checkSession(List<String> headers) {
 			String sidCandidate = null;
 			
@@ -319,20 +322,33 @@ public class SmartHttpServer {
 			}
 		}
 		
+		/**
+		 * A helping method that generates a brand new session and returns it.
+		 *
+		 * @return a freshly created {@code SessionMapEntry}
+		 */
 		private SessionMapEntry generateNewSession() {
 			SID = generateSessionID();
 			
-			SessionMapEntry session = new SessionMapEntry(SID,
-													  	  host,
-													  	  System.currentTimeMillis() + sessionTimeout * 1000,
-													  	  new ConcurrentHashMap<String, String>());
+			SessionMapEntry session = new SessionMapEntry();
+			session.sid = SID;
+			session.host = host;
+			session.validUntil = System.currentTimeMillis() + sessionTimeout * 1000;
+			session.map = new ConcurrentHashMap<String, String>();
 			
-			sessions.put(SID, session);
+			sessions.put(session.sid, session);
 			outputCookies.add(new RCCookie("sid", SID, null, host, "/"));
 			
 			return session;
 		}
 
+		/**
+		 * Processes the dispatch request.
+		 *
+		 * @param urlPath the URL to process
+		 * @param directCall if this request is being called directly
+		 * @throws Exception if an error occurred
+		 */
 		public void internalDispatchRequest(String urlPath, boolean directCall) throws Exception {
 			if(directCall && urlPath.startsWith("/private/")) {
 				sendError(ostream, 404, "File not found");
@@ -352,9 +368,7 @@ public class SmartHttpServer {
 			if(urlPath.startsWith("/ext/")) {
 				// substring(5) = skip the "/ext/" prefix
 				String fqcn = "hr.fer.zemris.java.webserver.workers." + urlPath.substring(5);
-				Class<?> referenceToClass = this.getClass().getClassLoader().loadClass(fqcn);
-				@SuppressWarnings("deprecation")
-				IWebWorker iww = (IWebWorker) referenceToClass.newInstance();
+				IWebWorker iww = getWebWorkerFromFQCN(fqcn);
 				
 				if(context == null) {
 					context = new RequestContext(ostream, params, permPrams, outputCookies, SID);
@@ -383,8 +397,7 @@ public class SmartHttpServer {
 				).execute();
 				
 			} else {
-				String mimeType = (mimeTypes.get(extension) != null) ? mimeTypes.get(extension) :
-																	   "application/octet-stream";
+				String mimeType = (mimeTypes.get(extension) != null) ? mimeTypes.get(extension) : "application/octet-stream";
 				
 				// Set-up the request context.
 				if(context == null) {
@@ -397,6 +410,12 @@ public class SmartHttpServer {
 			}
 		}
 		
+		/**
+		 * Returns the file extension from the provided file path.
+		 *
+		 * @param filePath the path of the file
+		 * @return the file extension from the provided file path
+		 */
 		private String getExtensionFromPath(Path filePath) {
 			String extension = "";
 			String path = filePath.toString();
@@ -421,7 +440,7 @@ public class SmartHttpServer {
 			byte[] requestBytes = readRequest(istream);
 			if (requestBytes == null) {
 				sendError(ostream, 400, "Bad request");
-				throw new Exception("Request is of invalid format.");
+				throw new Exception("Client's request is of invalid format.");
 			}
 			
 			// Get header lines in a list.
@@ -515,75 +534,9 @@ public class SmartHttpServer {
 			}
 		}
 
-		
 		@Override
 		public void dispatchRequest(String urlPath) throws Exception {
 			internalDispatchRequest(urlPath, false);
-		}
-	}
-	
-	//----------------------------------------------------------
-	//					  SESSION MAP ENTRY	
-	//----------------------------------------------------------
-	
-	/**
-	 * Models a session entry.
-	 *
-	 * @author Filip Nemec
-	 */
-	private static class SessionMapEntry {
-		
-		/** The session id. */
-		String sid;
-		
-		/** The session host. */
-		String host;
-		
-		/** The session timeout time. */
-		long validUntil;
-		
-		/** The session data storage. */
-		Map<String, String> map;
-
-		/**
-		 * Constructs a new session entry.
-		 *
-		 * @param sid the session id
-		 * @param host the host
-		 * @param validUntil the timeout time
-		 * @param map the client's data map
-		 */
-		public SessionMapEntry(String sid, String host, long validUntil, Map<String, String> map) {
-			this.sid = sid;
-			this.host = host;
-			this.validUntil = validUntil;
-			this.map = map;
-		}
-	}
-	
-	//----------------------------------------------------------
-	//					  SESSION CLEANER
-	//----------------------------------------------------------
-	
-	private class SessionCleaner extends Thread {
-		
-		@Override
-		public void run() {
-			while(true) {
-				var iter = sessions.entrySet().iterator();
-				for(; iter.hasNext(); ) {
-					SessionMapEntry session = iter.next().getValue();
-					
-					if(session.validUntil < System.currentTimeMillis()) {
-						iter.remove();
-					}
-				}
-
-				try {
-					Thread.sleep(300_000);
-				} catch (InterruptedException e) {
-				}
-			}
 		}
 	}
 	
@@ -636,36 +589,11 @@ public class SmartHttpServer {
 			}
 			
 			switch (state) {
-			case 0:
-				if (b == 13) {
-					state = 1;
-				} else if (b == 10)
-					state = 4;
-				break;
-			case 1:
-				if (b == 10) {
-					state = 2;
-				} else
-					state = 0;
-				break;
-			case 2:
-				if (b == 13) {
-					state = 3;
-				} else
-					state = 0;
-				break;
-			case 3:
-				if (b == 10) {
-					break l;
-				} else
-					state = 0;
-				break;
-			case 4:
-				if (b == 10) {
-					break l;
-				} else
-					state = 0;
-				break;
+				case 0: if (b == 13) state = 1; else if (b == 10) state = 4; break;
+				case 1: if (b == 10) state = 2; else state = 0; break;
+				case 2: if (b == 13) state = 3; else state = 0; break;
+				case 3: if (b == 10) break l; else state = 0; break;
+				case 4: if (b == 10) break l; else state = 0; break;
 			}
 		}
 		return bos.toByteArray();
@@ -698,13 +626,94 @@ public class SmartHttpServer {
 		}
 	}
 	
+	/**
+	 * Returns an instance of {@code IWebWorker} for the provided
+	 * FQCN (fully qualified class name).
+	 *
+	 * @param fqcn the fully qualified class name
+	 * @return an instance of {@code IWebWorker} for the provided FQCN
+	 */
+	@SuppressWarnings("deprecation")
+	private IWebWorker getWebWorkerFromFQCN(String fqcn) {
+		try {
+			Class<?> referenceToClass = this.getClass().getClassLoader().loadClass(fqcn);
+			return (IWebWorker) referenceToClass.newInstance();
+			
+		} catch(Exception e) {
+			System.out.println(e.getMessage());
+			return null;
+		}
+	}
+	
+	/**
+	 * Generates a random {@code String} that consists
+	 * of 20 random upper-case letters.
+	 *
+	 * @return a random session ID
+	 */
 	private String generateSessionID() {
 		var sb = new StringBuilder();
+		final int SID_LENGTH = 20;
 		
-		for(int i = 0; i < 20; i++) {
+		for(int i = 0; i < SID_LENGTH; i++) {
 			sb.append((char)('A' + sessionRandom.nextInt(26)));
 		}
 		
 		return sb.toString();
+	}
+	
+	//----------------------------------------------------------
+	//					  SESSION MAP ENTRY	
+	//----------------------------------------------------------
+	
+	/**
+	 * Models a session entry.
+	 *
+	 * @author Filip Nemec
+	 */
+	private static class SessionMapEntry {
+		
+		/** The session id. */
+		String sid;
+		
+		/** The session host. */
+		String host;
+		
+		/** The session timeout time. */
+		long validUntil;
+		
+		/** The session data storage. */
+		Map<String, String> map;
+	}
+	
+	//----------------------------------------------------------
+	//					  SESSION CLEANER
+	//----------------------------------------------------------
+	
+	/**
+	 * A helping daemonic thread used for cleaning the expired sessions.
+	 *
+	 * @author Filip Nemec
+	 */
+	private class SessionCleaner extends Thread {
+		
+		@Override
+		public void run() {
+			while(true) {
+				var iter = sessions.entrySet().iterator();
+				for(; iter.hasNext(); ) {
+					SessionMapEntry session = iter.next().getValue();
+					
+					if(session.validUntil < System.currentTimeMillis()) {
+						iter.remove();
+					}
+				}
+
+				try {
+					Thread.sleep(300_000);
+				} catch (InterruptedException e) {
+				}
+			}
+		}
 	}
 }
