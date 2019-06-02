@@ -5,7 +5,9 @@ import hr.fer.zemris.java.custom.collections.Collection;
 import hr.fer.zemris.java.custom.collections.LinkedListIndexedCollection;
 import hr.fer.zemris.java.custom.collections.List;
 
+@SuppressWarnings("javadoc")
 public class ListDemo {
+	
 	public static void main(String[] args) {
 		List col1 = new ArrayIndexedCollection();
 		List col2 = new LinkedListIndexedCollection();

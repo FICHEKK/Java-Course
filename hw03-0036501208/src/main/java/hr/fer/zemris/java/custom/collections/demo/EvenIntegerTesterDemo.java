@@ -5,7 +5,9 @@ import hr.fer.zemris.java.custom.collections.Collection;
 import hr.fer.zemris.java.custom.collections.LinkedListIndexedCollection;
 import hr.fer.zemris.java.custom.collections.Tester;
 
+@SuppressWarnings("javadoc")
 public class EvenIntegerTesterDemo {
+	
 	public static void main(String[] args) {
 		class EvenIntegerTester implements Tester {
 			public boolean test(Object obj) {

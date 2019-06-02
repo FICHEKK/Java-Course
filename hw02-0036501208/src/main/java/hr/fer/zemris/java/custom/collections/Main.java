@@ -2,6 +2,7 @@ package hr.fer.zemris.java.custom.collections;
 
 import java.util.Arrays;
 
+@SuppressWarnings("javadoc")
 public class Main {
 
 	public static void main(String[] args) {

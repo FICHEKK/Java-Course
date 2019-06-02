@@ -8,6 +8,7 @@ import hr.fer.zemris.java.custom.collections.Tester;
 @SuppressWarnings("javadoc")
 public class GenericsDemo {
 
+	@SuppressWarnings("unused")
 	public static void main(String[] args) {
 		
 		Collection<R2> kolekcija = new ArrayIndexedCollection<>();

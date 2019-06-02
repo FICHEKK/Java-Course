@@ -2,6 +2,7 @@ package hr.fer.zemris.java.hw02.demo;
 
 import hr.fer.zemris.java.hw02.ComplexNumber;
 
+@SuppressWarnings("javadoc")
 public class Main {
 	
 	public static void main(String[] args) {

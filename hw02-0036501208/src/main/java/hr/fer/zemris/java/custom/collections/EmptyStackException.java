@@ -6,6 +6,10 @@ package hr.fer.zemris.java.custom.collections;
  * empty stack.
  */
 public class EmptyStackException extends RuntimeException {
+	
+	/** Used for serialization. */
+	private static final long serialVersionUID = 1L;
+
 	/**
 	 * Constructs an exception that is usually thrown if the
 	 * user tries to get elements from an empty stack.

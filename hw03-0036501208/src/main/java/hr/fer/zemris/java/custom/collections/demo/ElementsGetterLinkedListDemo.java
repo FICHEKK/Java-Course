@@ -4,7 +4,9 @@ import hr.fer.zemris.java.custom.collections.Collection;
 import hr.fer.zemris.java.custom.collections.ElementsGetter;
 import hr.fer.zemris.java.custom.collections.LinkedListIndexedCollection;
 
+@SuppressWarnings("javadoc")
 public class ElementsGetterLinkedListDemo {
+	
 	public static void main(String[] args) {
 		Collection col = new LinkedListIndexedCollection();
 		col.add("Ivo");

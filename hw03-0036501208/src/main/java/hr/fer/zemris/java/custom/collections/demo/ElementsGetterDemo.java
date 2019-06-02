@@ -4,7 +4,9 @@ import hr.fer.zemris.java.custom.collections.ArrayIndexedCollection;
 import hr.fer.zemris.java.custom.collections.Collection;
 import hr.fer.zemris.java.custom.collections.ElementsGetter;
 
+@SuppressWarnings("javadoc")
 public class ElementsGetterDemo {
+	
 	public static void main(String[] args) {
 		Collection col1 = new ArrayIndexedCollection();
 		Collection col2 = new ArrayIndexedCollection();
