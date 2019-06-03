@@ -28,7 +28,7 @@
   
   <servlet>
   	<servlet-name>setColor</servlet-name>
-  	<servlet-class>hr.fer.zemris.java.hw13.servleti.SetColorServlet</servlet-class>
+  	<servlet-class>hr.fer.zemris.java.hw13.servlets.SetColorServlet</servlet-class>
   </servlet>
   
   <servlet-mapping>
@@ -40,7 +40,7 @@
   
   <servlet>
     <servlet-name>trigonometric</servlet-name>
-    <servlet-class>hr.fer.zemris.java.hw13.servleti.TrigonometricServlet</servlet-class>
+    <servlet-class>hr.fer.zemris.java.hw13.servlets.TrigonometricServlet</servlet-class>
   </servlet>
     
   <servlet-mapping>
@@ -58,6 +58,30 @@
   <servlet-mapping>
     <servlet-name>funny</servlet-name>
     <url-pattern>/funny</url-pattern>
+  </servlet-mapping>
+  
+  
+  
+  <servlet>
+    <servlet-name>report</servlet-name>
+    <jsp-file>/WEB-INF/pages/report.jsp</jsp-file>
+  </servlet>
+    
+  <servlet-mapping>
+    <servlet-name>report</servlet-name>
+    <url-pattern>/report</url-pattern>
+  </servlet-mapping>
+  
+  
+  
+    <servlet>
+    <servlet-name>reportImage</servlet-name>
+    <servlet-class>hr.fer.zemris.java.hw13.servlets.ReportServlet</servlet-class>
+  </servlet>
+    
+  <servlet-mapping>
+    <servlet-name>reportImage</servlet-name>
+    <url-pattern>/reportImage</url-pattern>
   </servlet-mapping>
   
 </web-app>

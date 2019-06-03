@@ -7,24 +7,57 @@
          version="3.1"
   metadata-complete="true">
 
-  <display-name>Moja prva aplikacija</display-name>
+  <display-name>Homework 13</display-name>
   <description>
-     Prva aplikacija
+     The 13th homework of the Java Course.
   </description>
   
+  
+  
   <servlet>
-    <servlet-name>servlet1</servlet-name>
-    <servlet-class>hr.fer.zemris.java.p11.servleti.PrviServlet</servlet-class>
+    <servlet-name>colors</servlet-name>
+    <jsp-file>/WEB-INF/pages/colors.jsp</jsp-file>
+  </servlet>
+    
+  <servlet-mapping>
+    <servlet-name>colors</servlet-name>
+    <url-pattern>/colors</url-pattern>
+  </servlet-mapping>
+  
+  
+  
+  <servlet>
+  	<servlet-name>setColor</servlet-name>
+  	<servlet-class>hr.fer.zemris.java.hw13.servleti.SetColorServlet</servlet-class>
   </servlet>
   
   <servlet-mapping>
-    <servlet-name>servlet1</servlet-name>
-    <url-pattern>/prvi</url-pattern>
+  	<servlet-name>setColor</servlet-name>
+  	<url-pattern>/setcolor</url-pattern>
   </servlet-mapping>
   
+  
+  
+  <servlet>
+    <servlet-name>trigonometric</servlet-name>
+    <servlet-class>hr.fer.zemris.java.hw13.servleti.TrigonometricServlet</servlet-class>
+  </servlet>
+    
   <servlet-mapping>
-    <servlet-name>servlet1</servlet-name>
-    <url-pattern>/index.html</url-pattern>
+    <servlet-name>trigonometric</servlet-name>
+    <url-pattern>/trigonometric</url-pattern>
+  </servlet-mapping>
+  
+  
+  
+  <servlet>
+    <servlet-name>funny</servlet-name>
+    <jsp-file>/stories/funny.jsp</jsp-file>
+  </servlet>
+    
+  <servlet-mapping>
+    <servlet-name>funny</servlet-name>
+    <url-pattern>/funny</url-pattern>
   </servlet-mapping>
   
 </web-app>

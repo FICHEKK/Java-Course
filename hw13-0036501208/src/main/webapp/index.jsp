@@ -12,5 +12,6 @@
      
      <a href="trigonometric?a=0&b=90"> Trigonometric functions </a> <br><br>
      <a href="funny"> A funny story </a> <br><br>
+     <a href="report"> OS usage report </a> <br><br>
    </body>
 </html>
