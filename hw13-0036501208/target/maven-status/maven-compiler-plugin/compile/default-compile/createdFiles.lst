@@ -1,2 +1,11 @@
-hr\fer\zemris\java\hw13\servleti\SetColorServlet.class
-hr\fer\zemris\java\hw13\servleti\TrigonometricServlet.class
+hr\fer\zemris\java\hw13\servlets\ReportServlet.class
+hr\fer\zemris\java\hw13\servlets\SetColorServlet.class
+hr\fer\zemris\java\hw13\servlets\GlasanjeServlet$Band.class
+hr\fer\zemris\java\hw13\servlets\listeners\WebApplicationStartListener.class
+hr\fer\zemris\java\hw13\servlets\GlasanjeGrafikaServlet.class
+hr\fer\zemris\java\hw13\servlets\GlasanjeServlet.class
+hr\fer\zemris\java\hw13\servlets\GlasanjeXlsServlet.class
+hr\fer\zemris\java\hw13\servlets\TrigonometricServlet.class
+hr\fer\zemris\java\hw13\servlets\PowersServlet.class
+hr\fer\zemris\java\hw13\servlets\GlasanjeGlasajServlet.class
+hr\fer\zemris\java\hw13\servlets\GlasanjeRezultatiServlet.class

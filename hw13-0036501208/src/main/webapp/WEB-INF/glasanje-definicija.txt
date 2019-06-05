@@ -1,0 +1,7 @@
+10	The Imagine Dragons	https://www.youtube.com/watch?v=7wtfhZwyrcc
+4	twenty one pilots	https://www.youtube.com/watch?v=UprcpdwuwCg
+17	Queen	https://www.youtube.com/watch?v=0AIlz08fZos
+1	The Beatles	https://www.youtube.com/watch?v=A_MjCqQoLLA
+8	Guns N' Roses	https://www.youtube.com/watch?v=1w7OgIMMRc4
+22	Coldplay	https://www.youtube.com/watch?v=1G4isv_Fylg
+11	Panic! At The Disco	https://www.youtube.com/watch?v=7qFF2v8VsaA

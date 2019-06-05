@@ -16,8 +16,7 @@ import org.jfree.data.general.DefaultPieDataset;
 import org.jfree.data.general.PieDataset;
 
 /**
- * Sets the web-page background color to the color
- * that was provided by the "color" parameter.
+ * Displays the OS usage report pie chart.
  *
  * @author Filip Nemec
  */

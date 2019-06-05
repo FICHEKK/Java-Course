@@ -13,7 +13,7 @@
   </description>
   
   
-  
+  <!-- COLORS -->
   <servlet>
     <servlet-name>colors</servlet-name>
     <jsp-file>/WEB-INF/pages/colors.jsp</jsp-file>
@@ -25,10 +25,10 @@
   </servlet-mapping>
   
   
-  
+  <!-- SET COLOR -->
   <servlet>
   	<servlet-name>setColor</servlet-name>
-  	<servlet-class>hr.fer.zemris.java.hw13.servleti.SetColorServlet</servlet-class>
+  	<servlet-class>hr.fer.zemris.java.hw13.servlets.SetColorServlet</servlet-class>
   </servlet>
   
   <servlet-mapping>
@@ -37,10 +37,10 @@
   </servlet-mapping>
   
   
-  
+  <!-- TRIGONOMETRIC -->
   <servlet>
     <servlet-name>trigonometric</servlet-name>
-    <servlet-class>hr.fer.zemris.java.hw13.servleti.TrigonometricServlet</servlet-class>
+    <servlet-class>hr.fer.zemris.java.hw13.servlets.TrigonometricServlet</servlet-class>
   </servlet>
     
   <servlet-mapping>
@@ -49,7 +49,7 @@
   </servlet-mapping>
   
   
-  
+  <!-- FUNNY -->
   <servlet>
     <servlet-name>funny</servlet-name>
     <jsp-file>/stories/funny.jsp</jsp-file>
@@ -58,6 +58,120 @@
   <servlet-mapping>
     <servlet-name>funny</servlet-name>
     <url-pattern>/funny</url-pattern>
+  </servlet-mapping>
+  
+  
+  <!-- REPORT -->
+  <servlet>
+    <servlet-name>report</servlet-name>
+    <jsp-file>/WEB-INF/pages/report.jsp</jsp-file>
+  </servlet>
+    
+  <servlet-mapping>
+    <servlet-name>report</servlet-name>
+    <url-pattern>/report</url-pattern>
+  </servlet-mapping>
+  
+  
+  <!-- REPORT IMAGE -->
+  <servlet>
+    <servlet-name>reportImage</servlet-name>
+    <servlet-class>hr.fer.zemris.java.hw13.servlets.ReportServlet</servlet-class>
+  </servlet>
+    
+  <servlet-mapping>
+    <servlet-name>reportImage</servlet-name>
+    <url-pattern>/reportImage</url-pattern>
+  </servlet-mapping>
+  
+  
+  <!-- POWERS -->
+  <servlet>
+    <servlet-name>powers</servlet-name>
+    <servlet-class>hr.fer.zemris.java.hw13.servlets.PowersServlet</servlet-class>
+  </servlet>
+    
+  <servlet-mapping>
+    <servlet-name>powers</servlet-name>
+    <url-pattern>/powers</url-pattern>
+  </servlet-mapping>
+  
+  
+  <!-- APP INFO -->
+  <servlet>
+    <servlet-name>appinfo</servlet-name>
+    <jsp-file>/WEB-INF/pages/appinfo.jsp</jsp-file>
+  </servlet>
+    
+  <servlet-mapping>
+    <servlet-name>appinfo</servlet-name>
+    <url-pattern>/appinfo</url-pattern>
+  </servlet-mapping>
+  
+  
+  <!-- WEB APPLICATION START LISTENER -->
+  <listener>
+  	<listener-class>hr.fer.zemris.java.hw13.servlets.listeners.WebApplicationStartListener</listener-class>
+  </listener>
+  
+  
+  <!-- VOTING FRONT PAGE -->
+  <servlet>
+    <servlet-name>glasanje</servlet-name>
+    <servlet-class>hr.fer.zemris.java.hw13.servlets.GlasanjeServlet</servlet-class>
+  </servlet>
+    
+  <servlet-mapping>
+    <servlet-name>glasanje</servlet-name>
+    <url-pattern>/glasanje</url-pattern>
+  </servlet-mapping>
+  
+  
+  <!-- VOTING - PERFOM VOTING -->
+  <servlet>
+    <servlet-name>glasanje-glasaj</servlet-name>
+    <servlet-class>hr.fer.zemris.java.hw13.servlets.GlasanjeGlasajServlet</servlet-class>
+  </servlet>
+    
+  <servlet-mapping>
+    <servlet-name>glasanje-glasaj</servlet-name>
+    <url-pattern>/glasanje-glasaj</url-pattern>
+  </servlet-mapping>
+  
+  
+  <!-- VOTING - PROCESS RESULTS -->
+  <servlet>
+    <servlet-name>glasanje-rezultati</servlet-name>
+    <servlet-class>hr.fer.zemris.java.hw13.servlets.GlasanjeRezultatiServlet</servlet-class>
+  </servlet>
+    
+  <servlet-mapping>
+    <servlet-name>glasanje-rezultati</servlet-name>
+    <url-pattern>/glasanje-rezultati</url-pattern>
+  </servlet-mapping>
+  
+  
+  <!-- VOTING - DRAW PIE CHART -->
+  <servlet>
+    <servlet-name>glasanje-grafika</servlet-name>
+    <servlet-class>hr.fer.zemris.java.hw13.servlets.GlasanjeGrafikaServlet</servlet-class>
+  </servlet>
+    
+  <servlet-mapping>
+    <servlet-name>glasanje-grafika</servlet-name>
+    <url-pattern>/glasanje-grafika</url-pattern>
+  </servlet-mapping>
+  
+    
+  <!-- VOTING - RETURN RESULTS IN XLS FORMAT -->
+  <servlet>
+    <servlet-name>glasanje-xls</servlet-name>
+    <servlet-class>hr.fer.zemris.java.hw13.servlets.GlasanjeXlsServlet</servlet-class>
+  </servlet>
+    
+  <servlet-mapping>
+    <servlet-name>glasanje-xls</servlet-name>
+    <url-pattern>/glasanje-xls</url-pattern>
   </servlet-mapping>
   
 </web-app>
