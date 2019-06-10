@@ -18,8 +18,21 @@
 		<maven.compiler.showDeprecation>true</maven.compiler.showDeprecation>
 		<junit.jupiter.version>5.4.0</junit.jupiter.version>
 	</properties>
-
+	
 	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.eclipse.jetty</groupId>
+				<artifactId>jetty-maven-plugin</artifactId>
+				<version>9.4.18.v20190429</version>
+				<configuration>
+					<scanIntervalSeconds>10</scanIntervalSeconds>
+					<webApp>
+						<contextPath>/webapp2</contextPath>
+					</webApp>
+				</configuration>
+			</plugin>
+		</plugins>
 		<finalName>webapp2</finalName>
 	</build>
 

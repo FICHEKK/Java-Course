@@ -5,6 +5,6 @@
      <h1> Error </h1>
      ${error_msg}
      
-     <a href="index.jsp"> Front page </a>
+     <p> <a href="index.jsp"> Front page </a>
    </body>
 </html>

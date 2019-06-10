@@ -10,11 +10,11 @@
  	 	<input type="submit" value="Tabulate"><input type="reset" value="Reset">
 	 </form>
      
-     <a href="trigonometric?a=0&b=90"> Trigonometric functions </a> <br><br>
-     <a href="funny"> A funny story </a> <br><br>
-     <a href="report"> OS usage report </a> <br><br>
-     <a href="powers?a=1&b=100&n=3"> Powers </a> <br><br>
-     <a href="appinfo"> App info </a> <br><br>
+     <a href="trigonometric?a=0&b=90"> Trigonometric functions in range [0, 90] </a> <br><br>
+     <a href="funny"> A funny short story </a> <br><br>
+     <a href="report"> OS usage report (April 2019) </a> <br><br>
+     <a href="powers?a=1&b=100&n=3"> Powers from 1 to 100, n = 3 </a> <br><br>
+     <a href="appinfo"> App info - time running </a> <br><br>
      <a href="glasanje"> Vote for your favourite band! </a>
    </body>
 </html>

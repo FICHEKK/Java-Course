@@ -16,7 +16,7 @@
   <!-- COLORS -->
   <servlet>
     <servlet-name>colors</servlet-name>
-    <jsp-file>/WEB-INF/pages/colors.jsp</jsp-file>
+    <jsp-file>/colors.jsp</jsp-file>
   </servlet>
     
   <servlet-mapping>
@@ -64,7 +64,7 @@
   <!-- REPORT -->
   <servlet>
     <servlet-name>report</servlet-name>
-    <jsp-file>/WEB-INF/pages/report.jsp</jsp-file>
+    <jsp-file>/report.jsp</jsp-file>
   </servlet>
     
   <servlet-mapping>
@@ -100,7 +100,7 @@
   <!-- APP INFO -->
   <servlet>
     <servlet-name>appinfo</servlet-name>
-    <jsp-file>/WEB-INF/pages/appinfo.jsp</jsp-file>
+    <jsp-file>/appinfo.jsp</jsp-file>
   </servlet>
     
   <servlet-mapping>
