@@ -53,10 +53,9 @@
 
 			<!-- Postavke za 2nd-level kojima hibernate-u kazemo sta da koristi kao implementaciju -->			
 			<!-- ================================================================================= -->
-			<property name="hibernate.cache.use_second_level_cache" value="true" />
+			<property name="hibernate.cache.use_second_level_cache" value="false" />
 			<property name="hibernate.cache.region.factory_class" value="org.hibernate.cache.jcache.JCacheRegionFactory"/>
 			<property name="hibernate.javax.cache.provider" value="org.ehcache.jsr107.EhcacheCachingProvider" />
-			<property name="hibernate.javax.cache.uri" value="file:/C:/Users/FICHEKK/Desktop/OPJJ/Homework/hw15-0036501208/src/main/resources/ehcache.xml"/>
 			<property name="hibernate.cache.default_cache_concurrency_strategy" value="read-write" />
 			<property name="hibernate.cache.use_query_cache" value="false" />
 			<property name="hibernate.generate_statistics" value="false" />
