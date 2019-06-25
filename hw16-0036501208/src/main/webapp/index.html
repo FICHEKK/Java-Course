@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title> Animal Gallery </title>
+		<script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+		
+		<style type="text/css">
+			body {
+				background-image: url("jungle_bg.jpg");
+				background-repeat: no-repeat;
+				background-size: cover;
+				margin: 0px;
+			}
+			
+			#title {
+				text-align: center;
+				font: bold 50px 'Arial';
+				color: orange;
+				background-color: black;
+			}
+			
+			#tag_buttons {
+				text-align: center;
+			}
+			
+			.tag {
+				background-color: orange;
+				border-color: black;
+				margin-left: 10px;
+				margin-right: 10px;
+				width: 60px;
+				height: 30px;
+			}
+			
+			.tag:hover {
+				background-color: silver;
+			}
+			
+			#thumbnails {
+				margin: 20px;
+				text-align: center;
+			}
+			
+			.thumbnail, .picture {
+				margin: 10px;
+				border: 7px solid #B8B8B8;
+				padding: 4px;
+				background-color: #EEEEEE;
+			}
+			
+			.thumbnail:hover {
+				background-color: #ffcc75;
+				border-color: orange;
+			}
+			
+			#focused_picture {
+				margin: 0px;
+				margin-bottom: 20px;
+				text-align: center;
+			}
+			
+			#description, #tag_list {
+				font: 30px 'Arial';
+				color: orange;
+				background-color: black;
+				margin: 0px;
+			}
+			
+			#description {
+				font-style: italic;
+			}
+			
+			#tag_list {
+				font: 15px 'Arial';
+			}
+		</style>
+		
+		<script type="text/javascript">
+			window.onload = function name() {
+				var xmlhttp = new XMLHttpRequest();
+				
+				xmlhttp.onreadystatechange = function() {
+					if(xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+						var tags = JSON.parse(xmlhttp.responseText);
+						var html = "";
+						
+						for(let i = 0; i < tags.length; i++) {
+							html += "<button class='tag' onclick='displayThumbnailsForTag(\"" + tags[i] + "\")'>" + tags[i] + "</button>";
+						}
+						
+						document.getElementById("tag_buttons").innerHTML = html;
+					}
+				}
+				
+				xmlhttp.open("GET", "rest/gallery/tags", true);
+				xmlhttp.send();
+			}
+			
+			function displayThumbnailsForTag(tag) {
+				$.ajax(
+					{
+						url: "rest/gallery/" + tag,
+						dataType: "json",
+						success: function(thumbnails) {
+		                    var html = "";
+		                    for (let i = 0; i < thumbnails.length; i++) {
+		                        html += "<img class='thumbnail' src='thumbnail?title=" + thumbnails[i].title +
+		                        		"' onclick='displayPicture(\"" + thumbnails[i].title + "\")'>";
+		                    }
+		                    $("#thumbnails").html(html);
+						}
+					}
+				);
+			}
+			
+			function displayPicture(title) {
+				$.ajax(
+					{
+						url: "rest/gallery/picture/" + title,
+						dataType: "json",
+						success: function(picture) {
+		                    var html = "<img class='picture' src='picture?title=" + picture.title + "'>";
+		                    html += "<h3 id='description'>" + picture.description + "</h3>";
+		                    html += "<h4 id='tag_list'> Tags: ";
+		                    
+		                    for(let i = 0; i < picture.tags.length; i++) {
+		                    	html += picture.tags[i] + " ";
+		                    }
+		                    
+		                    html += "</h4>";
+		                    
+		                    $("#focused_picture").html(html);
+						}
+					}
+				);
+			}
+		</script>
+	</head>
+	
+	<body>
+		<h1 id="title"> Animal Gallery </h1>
+		
+		<div id="tag_buttons"></div>
+		<div id="thumbnails"></div>
+		<div id="focused_picture"></div>
+	</body>
+</html>

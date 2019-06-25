@@ -1,0 +1,60 @@
+bear.jpg
+A big, brown bear
+big
+bison.jpg
+A friendly bison
+big
+butterfly.jpg
+A cute, small butterfly
+small
+camel.jpg
+A tired camel
+big
+donkey.jpg
+A gang of donkeys
+cute
+eagle.jpg
+A fast bird
+fast, bird
+elephant.jpg
+A bathing elephant
+big, cute
+flamingo.jpg
+A flamingo
+bird
+frog.jpg
+A beautiful yellow-brown frog
+small, fast
+giraffe.jpg
+A giraffe mafia
+big, fast
+lemur.jpg
+A cautious lemur
+small
+otter.jpg
+A cute little otter
+small, cute, water
+panda.jpg
+A kung-fu-panda
+cute
+penguin.jpg
+A curious penguin
+cute, bird
+rhino.jpg
+A strong rhino
+big
+seal.jpg
+A navy-seal
+water, cute
+snake.jpg
+A sneaky snake
+fast
+tiger.jpg
+A fast cat
+big, fast
+tortoise.jpg
+A strong, old, wise tortoise
+small
+zebra.jpg
+A cute zebra
+fast, cute
