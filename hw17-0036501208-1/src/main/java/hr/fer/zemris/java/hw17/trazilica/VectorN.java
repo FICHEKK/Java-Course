@@ -19,7 +19,7 @@ final class VectorN {
 	 * @param vector the vector
 	 * @return the norm of the given n-dimensional vector
 	 */
-	private static final double norm(Vector<Double> vector) {
+	public static final double norm(Vector<Double> vector) {
 		double underRoot = 0;
 		
 		for(int i = 0; i < vector.size(); i++) {
@@ -39,7 +39,7 @@ final class VectorN {
 	 * @throws IllegalArgumentException if vectors are not of the same dimensions
 	 * 									or if the dimension is not at least 1.
 	 */
-	private static final double dotProduct(Vector<Double> v1, Vector<Double> v2) {
+	public static final double dotProduct(Vector<Double> v1, Vector<Double> v2) {
 		if(v1.size() != v2.size())
 			throw new IllegalArgumentException("Vectors must be of equal dimensions.");
 		

@@ -2,8 +2,6 @@ package hr.fer.zemris.java.hw17.trazilica;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Arrays;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Scanner;
 
@@ -13,10 +11,10 @@ import java.util.Scanner;
  *
  * @author Filip Nemec
  */
-public class Konzola {
+public class Console {
 	
 	/** The root of the hierarchy containing all of the documents. */
-	private static final Path ROOT_PATH = Paths.get("C:/Users/FICHEKK/Desktop/clanci");
+	private static final Path ROOT_PATH = Paths.get("src/main/resources/clanci");
 	
 	/** Location of all the stop-words. */
 	private static final Path STOPWORD_PATH = Paths.get("src/main/resources/hrvatski_stoprijeci.txt");
@@ -38,10 +36,10 @@ public class Konzola {
 				engine.query(getWordsFromQuery(command));
 				
 			} else if(command.startsWith("type")) {
-			
+				engine.type(getNumberFromTypeCommand(command));
 				
 			} else if(command.equals("results")) {
-				
+				engine.printQueryResults();
 				
 			} else if(command.equals("exit")) {
 				System.out.println("Exiting...");
@@ -56,8 +54,32 @@ public class Konzola {
 		scanner.close();
 	}
 	
+	/**
+	 * Tries to parse the given "type" command to an integer.
+	 * If the parsing fails, the default value of 0 will be
+	 * returned.
+	 *
+	 * @param command the "type" command to be parsed
+	 * @return the parsed integer, or 0 if parsing fails
+	 */
+	private static int getNumberFromTypeCommand(String command) {
+		try {
+			return Integer.parseInt(command.substring(4).trim());
+			
+		} catch (NumberFormatException e) {
+			System.out.println("Failed to parse the to the integer. Returning the default value of 0.");
+			return 0;
+			
+		}
+	}
+
+	/**
+	 * Extracts the words from the query command.
+	 *
+	 * @param query the query command
+	 * @return the list of words from the query command
+	 */
 	private static List<String> getWordsFromQuery(String query) {
-		query = query.substring(5).trim();
-		return new LinkedList<String>( Arrays.asList(query.split("\\s")) );
+		return Util.convertTextToWords( query.substring(5).trim() );
 	}
 }

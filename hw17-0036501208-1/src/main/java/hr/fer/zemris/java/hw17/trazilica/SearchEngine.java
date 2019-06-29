@@ -1,7 +1,6 @@
 package hr.fer.zemris.java.hw17.trazilica;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
@@ -10,7 +9,6 @@ import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -19,12 +17,28 @@ import java.util.TreeSet;
 import java.util.Vector;
 
 /**
- * Models a search engine for the collection of the
- * textual documents.
+ * Models a search engine for the collection of the textual documents.
+ * The search engine first needs to prepare and store some information:
+ * <ol>
+ * <li> Load the stop-words from the predefined file. </li>
+ * <li> Build the vocabulary, taking the stop-words in the consideration. </li>
+ * <li> Build the <i>idf</i> vector which is used for creation of all the document vectors. </li>
+ * <li> Build all of the document vectors. </li>
+ * </ol>
+ * 
+ * After all the steps are done, the search is a simple process:
+ * <ol>
+ * <li> Convert the list of query words into a document vector ("query vector"). </li>
+ * <li> Check the similarity of the "query vector" against all of the document vectors. </li>
+ * <li> Sort the similarities by their value, and those values (associated with their document path) are the query results. </li>
+ * </ol>
  *
  * @author Filip Nemec
  */
 public class SearchEngine {
+	
+	/** The maximum number of query results printed by the {@link #printQueryResults()}. */
+	private static final int QUERY_RESULTS_PRINT_LIMIT = 10;
 	
 	/** A set of stop-words. */
 	private Set<String> stopwords = new HashSet<>();
@@ -72,8 +86,6 @@ public class SearchEngine {
 		buildVocabulary(root);
 		buildIdfVector(root);
 		buildDocuments(root);
-		
-		//vocabulary.forEach((word, info) -> System.out.println(word + " = [" + info.occurrences + ", " + info.parentDocuments + "]"));
 	}
 	
 	//------------------------------------------------------------------
@@ -94,7 +106,7 @@ public class SearchEngine {
 			System.err.println(ioe.getMessage());
 		}
 		
-		printInfo("Fetched " + stopwords.size() + " stop-words from '" + stopwordPath + "'.");
+		printInfo("Fetched " + stopwords.size() + " stop-words from '" + stopwordPath + "'.", 1);
 	}
 	
 	//------------------------------------------------------------------
@@ -109,7 +121,7 @@ public class SearchEngine {
 	private void buildVocabulary(Path root) {
 		try {
 			Files.walkFileTree(root, new VocabularyBuildingVisitor());
-			printInfo("Vocabulary building finished. Vocabulary contains " +  vocabulary.size() + " words.");
+			printInfo("Vocabulary building finished. Vocabulary contains " +  vocabulary.size() + " words.", 1);
 			
 		} catch (IOException e) {
 			System.err.println(e.getMessage());
@@ -140,9 +152,7 @@ public class SearchEngine {
 	 * @throws IOException if the document could not be read
 	 */
 	private void convertDocumentToVocabulary(Path document) throws IOException {
-		List<String> words = convertTextToWords(new String(Files.readAllBytes(document)));
-	
-		int vocabularyWordsBefore = vocabulary.size();
+		List<String> words = Util.convertTextToWords(new String(Files.readAllBytes(document)));
 		
 		for(String word : words) {
 			if(stopwords.contains(word)) continue;
@@ -160,9 +170,6 @@ public class SearchEngine {
 				}
 			}
 		}
-		
-		printInfo("Processed " + words.size() + " words from document '" + document + "'. " +
-				  (vocabulary.size() - vocabularyWordsBefore) + " new word(s) were added to the vocabulary.");
 	}
 	
 	//------------------------------------------------------------------
@@ -176,14 +183,14 @@ public class SearchEngine {
 	 */
 	private void buildIdfVector(Path root) {
 		// The total number of documents in the hierarchy.
-		documentCount = getDocumentCount(root.toFile());
+		documentCount = Util.getDocumentCount(root.toFile());
 		idf = new Vector<Double>(vocabulary.size());
 		
 		for(WordInfo wordInfo : vocabulary.values()) {
 			idf.add(Math.log((double) documentCount / wordInfo.parentDocuments));
 		}
 		
-		printInfo("Inverse document frequency (idf) vector was successfully built.");
+		printInfo("Inverse document frequency (idf) vector was successfully built.", 1);
 	}
 	
 	//------------------------------------------------------------------
@@ -199,7 +206,7 @@ public class SearchEngine {
 	private void buildDocuments(Path root) {
 		try {
 			Files.walkFileTree(root, new DocumentBuildingVisitor());
-			printInfo("Finished building tf-idf vectors for " + documentCount + " document(s).");
+			printInfo("Finished building tf-idf vectors for " + documentCount + " document(s).", 2);
 		
 		} catch (IOException e) {
 			System.err.println(e.getMessage());
@@ -234,16 +241,36 @@ public class SearchEngine {
 	 * @throws IOException if an IO error occurred
 	 */
 	private void buildDocument(Path docPath) throws IOException {
-		List<String> words = convertTextToWords(new String(Files.readAllBytes(docPath)));
+		List<String> words = Util.convertTextToWords(new String(Files.readAllBytes(docPath)));
+		Vector<Double> vector = buildDocumentVector( buildTermFrequencyMap(words) );
 		
-		// Maps how many times the given word was found in this document's text.
+		documents.add(new Document(docPath, vector));
+	}
+	
+	/**
+	 * Builds and returns the map that maps each word in the {@code words} list to the 
+	 * number of times that word is in the list. That map is called "term-frequency" map.
+	 *
+	 * @param words the list of words
+	 * @return the term-frequency map
+	 */
+	private Map<String, Integer> buildTermFrequencyMap(List<String> words) {
 		var termFrequencyMap = new HashMap<String, Integer>();
 		
 		for(String word : words) {
 			termFrequencyMap.merge(word, 1, (prev, value) -> prev + 1);
 		}
 		
-		// Building the document
+		return termFrequencyMap;
+	}
+	
+	/**
+	 * Builds and returns the <i>tf-idf</i> vector for the the given term-frequency map.
+	 *
+	 * @param termFrequencyMap the term-frequency map
+	 * @return the <i>tf-idf</i> document vector
+	 */
+	private Vector<Double> buildDocumentVector(Map<String, Integer> termFrequencyMap) {
 		var vector = new Vector<Double>(vocabulary.size());
 		
 		int index = 0;
@@ -260,134 +287,122 @@ public class SearchEngine {
 			index++;
 		}
 		
-		documents.add(new Document(docPath, vector));
+		return vector;
 	}
 	
 	//------------------------------------------------------------------
 	//							PUBLIC API
 	//------------------------------------------------------------------
 	
+	/**
+	 * Performs the search query for the given list of words.
+	 *
+	 * @param words the search words
+	 */
 	public void query(List<String> words) {
-		Iterator<String> iter = words.iterator();
+		// Remove all the words that are not in the vocabulary.
+		words.removeIf(word -> !vocabulary.containsKey(word));
 		
-		// Remove all stop-words from the given query.
-		while(iter.hasNext()) {
-			String word = iter.next();
-			
-			if(!vocabulary.containsKey(word)) {
-				iter.remove();
-			}
+		if(words.isEmpty()) {
+			System.out.println("Query ignored: No words from the query are in the vocabulary.");
+			return;
 		}
 		
-		printInfo("Query is: " + words);
-		
-		// Maps how many times the given word was found in this document's text.
-		var termFrequencyMap = new HashMap<String, Integer>();
-		
-		for(String word : words) {
-			termFrequencyMap.merge(word, 1, (prev, value) -> prev + 1);
-		}
-		
-		// Building the document
-		var queryVector = new Vector<Double>(vocabulary.size());
-		
-		int index = 0;
-		for(String word : vocabulary.keySet()) {
-			// The "term frequency" - the number of times a word was found in this document.
-			Integer tf = termFrequencyMap.get(word);
-			
-			if(tf == null) {
-				queryVector.add(0.0);
-			} else {
-				queryVector.add(tf * idf.get(index));
-			}
-			
-			index++;
-		}
-		
+		System.out.println("Query is: " + words);
+
+		var queryVector = buildDocumentVector( buildTermFrequencyMap(words) );		
 		results = new TreeSet<QueryResult>();
 		
 		for(Document document : documents) {
-			results.add(new QueryResult(document, VectorN.similarity(queryVector, document.vector)));
+			double similarity = VectorN.similarity(queryVector, document.vector);
+			
+			if(similarity > 0.0) {
+				results.add(new QueryResult(document, similarity));
+			}
 		}
 		
-		index = 0;
+		System.out.println("The closest " + QUERY_RESULTS_PRINT_LIMIT + " matches:");
+		printQueryResults();
+	}
+	
+	/**
+	 * Displays the results of the last query. If the query was not
+	 * yet been performed, appropriate message will be displayed.
+	 */
+	public void printQueryResults() {
+		if(results == null) {
+			System.out.println("There were no queries performed.\r\n");
+			return;
+		}
+			
+		int index = 0;
 		for(QueryResult result : results) {
 			System.out.println(String.format("[%d] (%.4f) " + result.document.path, index, result.similarity));
-			index++;
+			
+			if(++index == QUERY_RESULTS_PRINT_LIMIT) break;
 		}
+		
+		System.out.println();
+	}
+	
+	/**
+	 * Prints the document represented by the query result with the
+	 * given number {@code resultNumber}.
+	 *
+	 * @param resultNumber the number of the result
+	 */
+	public void type(int resultNumber) {
+		if(results == null) {
+			System.out.println("There were no queries performed.");
+			
+		} else if(resultNumber < 0) {
+			System.out.println("The result number must be a positive integer.");
+			
+		} else if(resultNumber >= results.size()) {
+			System.out.println("The result [" + resultNumber + "] does not exist.");
+			
+		} else {
+			int index = 0;
+			
+			for(QueryResult result : results) {
+				if(index == resultNumber) {
+					try {
+						String documentPath = result.document.path.toString();
+						System.out.println("Document: " + documentPath);
+						System.out.println("=".repeat(documentPath.length() * 2));
+						System.out.println(new String(Files.readAllBytes(result.document.path)));
+						System.out.println("=".repeat(documentPath.length() * 2));
+						
+					} catch(IOException e) {
+						System.out.println("Could not load the document.");
+						
+					}
+					
+					break;
+				}
+				index++;
+			}
+		}
+		
+		System.out.println();
 	}
 	
 	//------------------------------------------------------------------
 	//							HELPER METHODS
 	//------------------------------------------------------------------
 	
-	/**
-	 * Converts the given text into a list of words and returns that list.
-	 *
-	 * @param text the text to be converted to the words
-	 * @return the list of words in the given text
-	 */
-	private static List<String> convertTextToWords(String text) {
-		List<String> words = new LinkedList<>();
-		
-		int wordStart = -1;
-		int wordEnd = -1;
-		boolean processingWord = false;
-		
-		for(int index = 0; index < text.length(); index++) {
-			if(processingWord) {
-				if(Character.isAlphabetic(text.charAt(index))) {
-					wordEnd++;
-				} else {
-					processingWord = false;
-					words.add( text.substring(wordStart, wordEnd).toLowerCase() );
-				}
-				
-			} else {
-				if(Character.isAlphabetic(text.charAt(index))) {
-					wordStart = index;
-					wordEnd = wordStart + 1;
-					processingWord = true;
-				}
-			}
-		}
-		
-		if(processingWord) {
-			words.add( text.substring(wordStart).toLowerCase() );
-		}
-		
-		return words;
-	}
-	
-	/**
-	 * Returns the number of documents in the hierarchy.
-	 *
-	 * @param root the root of the hierarchy
-	 * @return the number of documents in the hierarchy
-	 */
-	private static int getDocumentCount(File root) {
-		File[] documents = root.listFiles();
-		int count = 0;
-		
-		for (File document : documents) {
-			if (document.isDirectory()) {
-				count += getDocumentCount(document);
-			} else {
-				count++;
-			}
-		}
 
-		return count;
-	}
+	
+
 	
 	/**
 	 * Prints the info message to the output stream
 	 *
 	 * @param message the message to be printed
+	 * @param n the number of new line characters after the message
 	 */
-	private static void printInfo(String message) {
-		System.out.println("[INFO] " + message);
+	private static void printInfo(String message, int n) {
+		System.out.print("[INFO] " + message + "\r\n".repeat(n));
 	}
 	
 	//------------------------------------------------------------------
