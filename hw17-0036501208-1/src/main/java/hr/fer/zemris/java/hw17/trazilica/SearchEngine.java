@@ -391,10 +391,6 @@ public class SearchEngine {
 	//							HELPER METHODS
 	//------------------------------------------------------------------
 	
-
-	
-
-	
 	/**
 	 * Prints the info message to the output stream
 	 *

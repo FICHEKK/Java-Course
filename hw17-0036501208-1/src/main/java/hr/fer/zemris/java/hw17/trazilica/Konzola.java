@@ -11,7 +11,7 @@ import java.util.Scanner;
  *
  * @author Filip Nemec
  */
-public class Console {
+public class Konzola {
 	
 	/** The root of the hierarchy containing all of the documents. */
 	private static final Path ROOT_PATH = Paths.get("src/main/resources/clanci");
