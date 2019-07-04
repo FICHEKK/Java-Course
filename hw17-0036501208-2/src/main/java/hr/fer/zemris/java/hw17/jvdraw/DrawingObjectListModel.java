@@ -42,7 +42,6 @@ public class DrawingObjectListModel extends AbstractListModel<GeometricalObject>
 	@Override
 	public void objectsAdded(DrawingModel source, int index0, int index1) {
 		this.fireIntervalAdded(source, index0, index1);
-		
 	}
 
 	@Override

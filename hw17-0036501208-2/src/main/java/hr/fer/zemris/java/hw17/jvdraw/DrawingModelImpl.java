@@ -119,6 +119,8 @@ public class DrawingModelImpl implements DrawingModel, GeometricalObjectListener
 
 	@Override
 	public void geometricalObjectChanged(GeometricalObject o) {
+		modified = true;
+		
 		int i = indexOf(o);
 		notifyListenersObjectsChanged(i, i);
 	}

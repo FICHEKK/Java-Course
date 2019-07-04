@@ -23,16 +23,16 @@ public class LineEditor extends GeometricalObjectEditor {
 	/** The subject of editing. */
 	private Line line;
 	
-	/** The field for editing the line's x0 coordinate. */
+	/** The field for editing the line's start point X coordinate. */
 	private JTextField startXField;
 	
-	/** The field for editing the line's y0 coordinate. */
+	/** The field for editing the line's start point Y coordinate. */
 	private JTextField startYField;
 	
-	/** The field for editing the line's x1 coordinate. */
+	/** The field for editing the line's end point X coordinate. */
 	private JTextField endXField;
 	
-	/** The field for editing the line's y1 coordinate. */
+	/** The field for editing the line's end point Y coordinate. */
 	private JTextField endYField;
 	
 	/** The field for editing the line's red color component. */

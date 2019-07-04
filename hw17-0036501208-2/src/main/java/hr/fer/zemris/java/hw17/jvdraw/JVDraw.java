@@ -69,6 +69,12 @@ public class JVDraw extends JFrame implements Supplier<Tool> {
 	/** The drawing canvas. */
 	private JDrawingCanvas canvas;
 	
+	/** The color area for the foreground color. */
+	private JColorArea fgColorArea;
+	
+	/** The color area for the background color. */
+	private JColorArea bgColorArea;
+	
 	//----------------------------------------------------------------
 	//						  	Constructor
 	//----------------------------------------------------------------
@@ -84,46 +90,8 @@ public class JVDraw extends JFrame implements Supplier<Tool> {
 		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 		setSize(800, 600);
 		setResizable(false);
-
-		initMenu();
+		
 		initGUI();
-	}
-	
-	/**
-	 * Initializes the menu.
-	 */
-	private void initMenu() {
-		JMenuBar menuBar = new JMenuBar();
-		
-		// FILE
-		JMenu file = new JMenu("File");
-		menuBar.add(file);
-		
-		// Open action
-		open.putValue(Action.NAME, "Open");
-		file.add(new JMenuItem(open));
-		
-		// Save action
-		save.putValue(Action.NAME, "Save");
-		file.add(new JMenuItem(save));
-		
-		// Save As action
-		saveAs.putValue(Action.NAME, "Save As");
-		file.add(new JMenuItem(saveAs));
-		
-		file.addSeparator();
-		
-		// Export action
-		export.putValue(Action.NAME, "Export");
-		file.add(new JMenuItem(export));
-		
-		file.addSeparator();
-		
-		// Exit action
-		exit.putValue(Action.NAME, "Exit");
-		file.add(new JMenuItem(exit));
-		
-		setJMenuBar(menuBar);
 	}
 
 	/**
@@ -133,60 +101,11 @@ public class JVDraw extends JFrame implements Supplier<Tool> {
 		Container pane = getContentPane();
 		
 		//-----------------------------------------------------
-		//			Top - Toolbar & object selection
+		//				  Top - Menu & Toolbar
 		//-----------------------------------------------------
-		JToolBar tb = new JToolBar();
-		tb.setFloatable(true);
-		tb.setVisible(true);
 		
-		JColorArea fgColorArea = new JColorArea(Color.BLUE);
-		JColorArea bgColorArea = new JColorArea(Color.BLACK);
-		
-		tb.add(fgColorArea);
-		tb.add(bgColorArea);
-		
-		JToggleButton line = new JToggleButton(new AbstractAction() {
-			
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				selectedTool = new LineTool(fgColorArea, model);
-				
-			}
-		});
-		line.setText("Line");
-		selectedTool = new LineTool(fgColorArea, model);
-		line.setSelected(true);
-		
-		
-		JToggleButton circle = new JToggleButton(new AbstractAction() {
-			
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				selectedTool = new CircleTool(fgColorArea, model);
-			}
-		});
-		circle.setText("Circle");
-		
-		
-		JToggleButton filledCircle = new JToggleButton(new AbstractAction() {
-			
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				selectedTool = new FilledCircleTool(fgColorArea, bgColorArea, model);
-			}
-		});
-		filledCircle.setText("Filled circle");
-		
-		ButtonGroup group = new ButtonGroup();
-		group.add(line);
-		group.add(circle);
-		group.add(filledCircle);
-		
-		tb.add(line);
-		tb.add(circle);
-		tb.add(filledCircle);
-		
-		pane.add(tb, BorderLayout.PAGE_START);
+		initMenu();
+		pane.add(createToolbar(), BorderLayout.PAGE_START);
 		
 		//-----------------------------------------------------
 		//			Center - Canvas and object list
@@ -268,12 +187,124 @@ public class JVDraw extends JFrame implements Supplier<Tool> {
 	}
 	
 	//----------------------------------------------------------------
-	//						 	 Actions
+	//							Menu
 	//----------------------------------------------------------------
 	
 	/**
-	 * Performs the "Open" action.
+	 * Initializes the menu.
 	 */
+	private void initMenu() {
+		JMenuBar menuBar = new JMenuBar();
+		
+		// FILE
+		JMenu file = new JMenu("File");
+		menuBar.add(file);
+		
+		// Open action
+		open.putValue(Action.NAME, "Open");
+		file.add(new JMenuItem(open));
+		
+		// Save action
+		save.putValue(Action.NAME, "Save");
+		file.add(new JMenuItem(save));
+		
+		// Save As action
+		saveAs.putValue(Action.NAME, "Save As");
+		file.add(new JMenuItem(saveAs));
+		
+		file.addSeparator();
+		
+		// Export action
+		export.putValue(Action.NAME, "Export As Image");
+		file.add(new JMenuItem(export));
+		
+		file.addSeparator();
+		
+		// Exit action
+		exit.putValue(Action.NAME, "Exit");
+		file.add(new JMenuItem(exit));
+		
+		setJMenuBar(menuBar);
+	}
+	
+	//----------------------------------------------------------------
+	//							Tool-bar
+	//----------------------------------------------------------------
+	
+	/**
+	 * Creates and returns the application's tool-bar.
+	 *
+	 * @return the created tool-bar
+	 */
+	private JToolBar createToolbar() {
+		JToolBar tb = new JToolBar();
+		
+		tb.setFloatable(true);
+		tb.setVisible(true);
+		
+		tb.add(fgColorArea = new JColorArea(Color.BLUE));
+		tb.add(bgColorArea = new JColorArea(Color.BLACK));
+		
+		// 								Tools
+		//---------------------------------------------------------------------
+		
+		JToggleButton line = new JToggleButton(onLineToolClick);
+		line.setText("Line");
+		line.setSelected(true);
+		selectedTool = new LineTool(fgColorArea, model);
+		
+		JToggleButton circle = new JToggleButton(onCircleToolClick);
+		circle.setText("Circle");
+		
+		JToggleButton filledCircle = new JToggleButton(onFilledCircleToolClick);
+		filledCircle.setText("Filled circle");
+		
+		ButtonGroup group = new ButtonGroup();
+		group.add(line);
+		group.add(circle);
+		group.add(filledCircle);
+		
+		tb.add(line);
+		tb.add(circle);
+		tb.add(filledCircle);
+		
+		//---------------------------------------------------------------------
+		
+		return tb;
+	}
+	
+	//----------------------------------------------------------------
+	//					Actions - on tool click
+	//----------------------------------------------------------------
+	
+	private final Action onLineToolClick = new AbstractAction() {
+		
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			selectedTool = new LineTool(fgColorArea, model);
+		}
+	};
+	
+	private final Action onCircleToolClick = new AbstractAction() {
+		
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			selectedTool = new CircleTool(fgColorArea, model);
+		}
+	};
+	
+	private final Action onFilledCircleToolClick = new AbstractAction() {
+		
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			selectedTool = new FilledCircleTool(fgColorArea, bgColorArea, model);
+		}
+	};
+	
+	//----------------------------------------------------------------
+	//						  	  Open
+	//----------------------------------------------------------------
+	
 	private final Action open = new AbstractAction() {
 		
 		@Override
@@ -290,12 +321,12 @@ public class JVDraw extends JFrame implements Supplier<Tool> {
 				
 				try {
 					recreateModelFromText(Files.readAllLines(jfc.getSelectedFile().toPath()));
-
+					
 				} catch (IOException ex) {
-					System.err.println("Could not write to the file.");
+					System.err.println("Could not read from the file.");
 				}
 				
-				currentPath = source;
+				changeCurrentPathTo(source);
 			}
 		}
 		
@@ -336,10 +367,11 @@ public class JVDraw extends JFrame implements Supplier<Tool> {
 			model.clearModifiedFlag();
 		}
 	};
+
+	//----------------------------------------------------------------
+	//						 Saving as text
+	//----------------------------------------------------------------
 	
-	/**
-	 * Performs the "Save" action.
-	 */
 	private final Action save = new AbstractAction() {
 		
 		@Override
@@ -353,9 +385,6 @@ public class JVDraw extends JFrame implements Supplier<Tool> {
 		}
 	};
 	
-	/**
-	 * Performs the "Save As" action.
-	 */
 	private final Action saveAs = new AbstractAction() {
 		
 		@Override
@@ -399,13 +428,16 @@ public class JVDraw extends JFrame implements Supplier<Tool> {
 			return;
 		}
 		
-		currentPath = destination;
+		changeCurrentPathTo(destination);
 		model.clearModifiedFlag();
+		
+		JOptionPane.showMessageDialog(JVDraw.this, "Project successfully saved!");
 	}
 	
-	/**
-	 * Performs the "Export" action.
-	 */
+	//----------------------------------------------------------------
+	//						 Exporting as image
+	//----------------------------------------------------------------
+	
 	private final Action export = new AbstractAction() {
 		
 		@Override
@@ -431,12 +463,23 @@ public class JVDraw extends JFrame implements Supplier<Tool> {
 						destination = jfc.getSelectedFile().toPath();
 						break;
 					} else {
-						JOptionPane.showMessageDialog(JVDraw.this, "Image extension must be: 'png' or 'gif' or 'jpg'");
+						JOptionPane.showMessageDialog(JVDraw.this, "Image extension must be 'png', 'gif' or 'jpg'");
 						continue;
 					}
 				}
 			}
 			
+			exportAsImage(destination, extension);
+		}
+
+		/**
+		 * Exports the current scene (image consisting of geometrical objects)
+		 * as an image to the given destination.
+		 *
+		 * @param destination the destination
+		 * @param extension the image extension; can be 'png', 'gif' or 'jpg'
+		 */
+		private void exportAsImage(Path destination, String extension) {
 			var BBcalculator = new GeometricalObjectBBCalculator();
 			for(int i = 0; i < model.getSize(); i++) {
 				model.getObject(i).accept(BBcalculator);
@@ -458,7 +501,7 @@ public class JVDraw extends JFrame implements Supplier<Tool> {
 			try {
 				ImageIO.write(image, extension, destination.toFile());
 			} catch (IOException e1) {
-				JOptionPane.showMessageDialog(JVDraw.this, "Error during image exporting. Image was not saved.");
+				JOptionPane.showMessageDialog(JVDraw.this, "Error during image exporting. Image was not exported.");
 				return;
 			}
 			
@@ -466,9 +509,10 @@ public class JVDraw extends JFrame implements Supplier<Tool> {
 		}
 	};
 	
-	/**
-	 * Performs the "Exit" action.
-	 */
+	//----------------------------------------------------------------
+	//						    Exiting
+	//----------------------------------------------------------------
+	
 	private final Action exit = new AbstractAction() {
 		
 		@Override
@@ -496,6 +540,10 @@ public class JVDraw extends JFrame implements Supplier<Tool> {
 		}
 	};
 	
+	//----------------------------------------------------------------
+	//						  Helper methods
+	//----------------------------------------------------------------
+	
 	/**
 	 * Prompts the user to decide what should happen with the
 	 * unsaved image.
@@ -503,7 +551,7 @@ public class JVDraw extends JFrame implements Supplier<Tool> {
 	 * @return the result of the decision
 	 */
 	private int getUserDecisionForUnsavedFile() {
-		String[] options = {"Save Image & Exit", "Discard Image & Exit", "Cancel Exiting"};
+		String[] options = {"Save Project & Exit", "Discard Project & Exit", "Cancel Exiting"};
 		
 		return JOptionPane.showOptionDialog(JVDraw.this,
 											"Image was not saved. What would you like to do?", 
@@ -513,6 +561,16 @@ public class JVDraw extends JFrame implements Supplier<Tool> {
 											null,
 											options,
 										    options[0]);
+	}
+	
+	/**
+	 * Changes the current path and updates the title.
+	 *
+	 * @param path the new current path
+	 */
+	private void changeCurrentPathTo(Path path) {
+		this.currentPath = path;
+		setTitle("JPaint++ | " + currentPath);
 	}
 	
 	//----------------------------------------------------------------
